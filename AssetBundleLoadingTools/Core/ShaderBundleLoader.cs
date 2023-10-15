@@ -212,9 +212,9 @@ namespace AssetBundleLoadingTools.Core
         private void LoadReplacementShaderFromBundle(CompiledShaderInfo shaderInfo, ShaderBundleManifest manifest)
         {
             if (shaderInfo.Shader != null) return;
-            if (manifest.AssetBundle == null) 
+            if (manifest.AssetBundle == null)
             {
-                throw new NullReferenceException(nameof(manifest.AssetBundle));
+                throw new ArgumentNullException(nameof(manifest.AssetBundle), "Replacement shader asset bundle does not exist");
             }
 
             foreach (var bundlePathAndShaderInfo in manifest.ShadersByBundlePath)
@@ -229,7 +229,7 @@ namespace AssetBundleLoadingTools.Core
             if (shaderInfo.Shader != null) return;
             if (manifest.AssetBundle == null)
             {
-                throw new NullReferenceException(nameof(manifest.AssetBundle));
+                throw new ArgumentNullException(nameof(manifest.AssetBundle), "Replacement shader asset bundle does not exist");
             }
 
             foreach (var bundlePathAndShaderInfo in manifest.ShadersByBundlePath)
