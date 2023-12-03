@@ -1,0 +1,4 @@
+﻿<settings-container xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd">
+    <toggle-setting text="Enable Shader Replacement" value="enableShaderReplacement" bind-value="true" apply-on-change="true" hover-hint="Allow mods that load assets to request replacement shaders. Toggling this will require currently loaded models to be reloaded." />
+    <toggle-setting text="Enable Multi-Pass Rendering" value="enableMultiPassRendering" bind-value="true" apply-on-change="true" hover-hint="Enable legacy multi pass rendering for better compatibility with older models. Enabling this may have a negative performance impact." />
+</settings-container>

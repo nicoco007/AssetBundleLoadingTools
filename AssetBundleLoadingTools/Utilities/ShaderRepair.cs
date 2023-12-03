@@ -64,6 +64,11 @@ namespace AssetBundleLoadingTools.Utilities
 
         private static async Task<ShaderReplacementInfo> ReplaceShadersAsync(List<Material> materials, List<CompiledShaderInfo> shaderInfos)
         {
+            if (!Plugin.Config.EnableShaderReplacement)
+            {
+                return new ShaderReplacementInfo(true);
+            }
+
             if (shaderInfos.All(x => x.IsSupported))
             {
                 // TODO: explicit override for "force compiled" stuff

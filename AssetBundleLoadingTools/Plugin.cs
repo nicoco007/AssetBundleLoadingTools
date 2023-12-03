@@ -1,5 +1,7 @@
 ﻿using AssetBundleLoadingTools.Config;
 using AssetBundleLoadingTools.Core;
+using AssetBundleLoadingTools.UI;
+using BeatSaberMarkupLanguage.Settings;
 using HarmonyLib;
 using IPA;
 using IPA.Config.Stores;
@@ -14,7 +16,6 @@ namespace AssetBundleLoadingTools
     [Plugin(RuntimeOptions.SingleStartInit)]
     internal class Plugin
     {
-        internal static Plugin Instance { get; private set; } = null!;
         private static readonly Harmony harmony = new("com.legoandmars.assetbundleloadingtools");
 
         /// <summary>
@@ -25,10 +26,11 @@ namespace AssetBundleLoadingTools
         internal static PluginConfig Config { get; private set; } = null!;
         private static Timer? _debuggerWriteTimer { get; set; }
 
+        private SettingsHost settingsHost = new();
+
         [Init]
         public void Init(IPALogger logger, IPA.Config.Config config)
         {
-            Instance = this;
             Log = logger;
             Config = config.Generated<PluginConfig>();
 
@@ -60,6 +62,8 @@ namespace AssetBundleLoadingTools
         public void OnApplicationStart()
         {
             harmony.PatchAll();
+
+            BSMLSettings.instance.AddSettingsMenu("Asset Bundles", "AssetBundleLoadingTools.UI.settings.bsml", settingsHost);
         }
 
         [OnExit]
@@ -67,6 +71,8 @@ namespace AssetBundleLoadingTools
         {
             _debuggerWriteTimer?.Dispose();
             harmony.UnpatchSelf();
+
+            BSMLSettings.instance.RemoveSettingsMenu(settingsHost);
         }
     }
 }
