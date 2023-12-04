@@ -1,5 +1,5 @@
-﻿using HarmonyLib;
-using System;
+﻿using AssetBundleLoadingTools.Utilities;
+using HarmonyLib;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -36,13 +36,13 @@ namespace AssetBundleLoadingTools.Patches
                 .MatchForward(false,
                     new CodeMatch(OpCodes.Ldarg_0),
                     new CodeMatch(OpCodes.Ldloc_0),
-                    new CodeMatch(i => i.opcode == OpCodes.Ldloc_S && ((LocalBuilder)i.operand).LocalIndex == 7), // RenderTexture value
+                    new CodeMatch(i => i.LoadsLocal(7)), // RenderTexture value
                     new CodeMatch(i => i.Calls(CreateOrUpdateMirrorCamera))) // right after the render textures dictionary is updated
                 .ThrowIfInvalid("CreateOrUpdateMirrorCamera not found")
                 .CreateLabel(out Label afterCreateRenderTextureLabel)
                 .MatchBack(false,
                     new CodeMatch(i => i.Branches(out Label? _)),
-                    new CodeMatch(i => i.opcode == OpCodes.Ldloc_S && ((LocalBuilder)i.operand).LocalIndex == 7), // RenderTexture value
+                    new CodeMatch(i => i.LoadsLocal(7)), // RenderTexture value
                     new CodeMatch(OpCodes.Ret))
                 .ThrowIfInvalid("Early return not found")
                 .Advance(1)
@@ -55,7 +55,7 @@ namespace AssetBundleLoadingTools.Patches
 
                 // don't make the render texture double wide when multi-pass is enabled
                 .MatchForward(true,
-                    new CodeMatch(i => i.opcode == OpCodes.Ldloc_S && ((LocalBuilder)i.operand).LocalIndex == 4), // bool stereoEnabled
+                    new CodeMatch(i => i.LoadsLocal(4)), // bool stereoEnabled
                     new CodeMatch(i => i.Branches(out useMonoTextureSizeLabel)))
                 .ThrowIfInvalid("Render texture creation stereoEnabled branch not found")
                 .Advance(1)
