@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -19,6 +20,7 @@ namespace AssetBundleLoadingTools.Patches
         private static readonly MethodInfo GLSetInvertCulling = AccessTools.DeclaredPropertySetter(typeof(GL), nameof(GL.invertCulling));
         private static readonly MethodInfo GLFlushMethod = AccessTools.DeclaredMethod(typeof(GL), nameof(GL.Flush));
         private static readonly MethodInfo RenderMultiPassMethod = AccessTools.DeclaredMethod(typeof(MirrorRendererSOMultiPass), nameof(RenderMultiPass));
+        private static readonly MethodInfo AddEyeRenderedMethod = AccessTools.DeclaredMethod(typeof(MirrorRendererSOMultiPass), nameof(AddEyeRendered));
         private static readonly MethodInfo CheckEyeAlreadyRenderedMethod = AccessTools.DeclaredMethod(typeof(MirrorRendererSOMultiPass), nameof(CheckEyeAlreadyRendered));
 
         internal static readonly Dictionary<int, HashSet<(MirrorRendererSO.CameraTransformData, Camera.MonoOrStereoscopicEye)>> renderedEyes = new();
@@ -30,21 +32,26 @@ namespace AssetBundleLoadingTools.Patches
             Label? useMonoTextureSizeLabel = null;
 
             return new CodeMatcher(instructions, generator)
-                // change the render texture existence check so it doesn't return when the check fails
+                // change the render texture existence check so it only returns if the stereoActiveEye was already rendered
                 .MatchForward(false,
                     new CodeMatch(OpCodes.Ldarg_0),
                     new CodeMatch(OpCodes.Ldloc_0),
                     new CodeMatch(i => i.opcode == OpCodes.Ldloc_S && ((LocalBuilder)i.operand).LocalIndex == 7), // RenderTexture value
                     new CodeMatch(i => i.Calls(CreateOrUpdateMirrorCamera))) // right after the render textures dictionary is updated
-                .ThrowIfInvalid("CreateOrUpdateMirrorCamera (1) not found")
+                .ThrowIfInvalid("CreateOrUpdateMirrorCamera not found")
                 .CreateLabel(out Label afterCreateRenderTextureLabel)
                 .MatchBack(false,
                     new CodeMatch(i => i.Branches(out Label? _)),
                     new CodeMatch(i => i.opcode == OpCodes.Ldloc_S && ((LocalBuilder)i.operand).LocalIndex == 7), // RenderTexture value
                     new CodeMatch(OpCodes.Ret))
                 .ThrowIfInvalid("Early return not found")
-                .RemoveInstructions(3)
-                .Insert(new CodeInstruction(OpCodes.Brtrue, afterCreateRenderTextureLabel))
+                .Advance(1)
+                .Insert(
+                    new CodeInstruction(OpCodes.Ldarg_0), // this
+                    new CodeInstruction(OpCodes.Ldloc_0), // Camera current
+                    new CodeInstruction(OpCodes.Ldloc, 6), // CameraTransformData cameraTransformData
+                    new CodeInstruction(OpCodes.Call, CheckEyeAlreadyRenderedMethod),
+                    new CodeInstruction(OpCodes.Brfalse, afterCreateRenderTextureLabel))
 
                 // don't make the render texture double wide when multi-pass is enabled
                 .MatchForward(true,
@@ -58,27 +65,19 @@ namespace AssetBundleLoadingTools.Patches
                     new CodeInstruction(OpCodes.Ceq),
                     new CodeInstruction(OpCodes.Brtrue, useMonoTextureSizeLabel))
 
-                // only render once per stereoActiveEye
-                .MatchForward(false,
-                    new CodeMatch(OpCodes.Ldarg_0),
-                    new CodeMatch(OpCodes.Ldloc_0),
-                    new CodeMatch(i => i.opcode == OpCodes.Ldloc_S && ((LocalBuilder)i.operand).LocalIndex == 7), // RenderTexture value
-                    new CodeMatch(i => i.Calls(CreateOrUpdateMirrorCamera)))
-                .ThrowIfInvalid("CreateOrUpdateMirrorCamera (2) not found")
-                .Insert(
-                    new CodeInstruction(OpCodes.Ldarg_0), // this
-                    new CodeInstruction(OpCodes.Ldloc_0), // Camera current
-                    new CodeInstruction(OpCodes.Ldloc, 6), // CameraTransformData cameraTransformData
-                    new CodeInstruction(OpCodes.Call, CheckEyeAlreadyRenderedMethod),
-                    new CodeInstruction(OpCodes.Brfalse, afterCreateRenderTextureLabel),
-                    new CodeInstruction(OpCodes.Ldloc, 7), // RenderTexture value
-                    new CodeInstruction(OpCodes.Ret))
-
-                // add our branch when XRSettings.stereoRenderingMode is MultiPass
+                // register rendered eye after rendering
                 .MatchForward(false,
                     new CodeMatch(i => i.Calls(GLSetInvertCulling)), // right after the if (stereoEnabled) { ... } else { ... },
                     new CodeMatch(i => i.Calls(GLFlushMethod)))
                 .CreateLabel(out Label afterIfStatementLabel)
+                .Advance(2)
+                .Insert(
+                    new CodeInstruction(OpCodes.Ldarg_0), // this
+                    new CodeInstruction(OpCodes.Ldloc_0), // Camera current
+                    new CodeInstruction(OpCodes.Ldloc, 6), // CameraTransformData cameraTransformData
+                    new CodeInstruction(OpCodes.Call, AddEyeRenderedMethod))
+
+                // add our branch when XRSettings.stereoRenderingMode is MultiPass
                 .MatchBack(true,
                     new CodeMatch(i => i.Calls(CameraGetStereoEnabled)), // got back to the beginning of the if statement
                     new CodeMatch(i => i.Branches(out Label? _)))
@@ -105,28 +104,26 @@ namespace AssetBundleLoadingTools.Patches
         [HarmonyPrefix]
         public static void PrepareForNextFramePrefix(MirrorRendererSO __instance)
         {
-            if (renderedEyes.TryGetValue(__instance.GetHashCode(), out var hashSet))
+            if (renderedEyes.TryGetValue(__instance.GetInstanceID(), out var hashSet))
             {
                 hashSet.Clear();
             }
         }
 
-        private static bool CheckEyeAlreadyRendered(MirrorRendererSO self, Camera current, MirrorRendererSO.CameraTransformData cameraTransformData)
+        private static void AddEyeRendered(MirrorRendererSO self, Camera current, MirrorRendererSO.CameraTransformData cameraTransformData)
         {
             if (!renderedEyes.TryGetValue(self.GetInstanceID(), out var hashSet))
             {
-                renderedEyes.Add(self.GetInstanceID(), new HashSet<(MirrorRendererSO.CameraTransformData, Camera.MonoOrStereoscopicEye)>());
-                return false;
-            }
-
-            if (hashSet.Contains((cameraTransformData, current.stereoActiveEye)))
-            {
-                return true;
+                hashSet = new HashSet<(MirrorRendererSO.CameraTransformData, Camera.MonoOrStereoscopicEye)>();
+                renderedEyes.Add(self.GetInstanceID(), hashSet);
             }
 
             hashSet.Add((cameraTransformData, current.stereoActiveEye));
+        }
 
-            return false;
+        private static bool CheckEyeAlreadyRendered(MirrorRendererSO self, Camera current, MirrorRendererSO.CameraTransformData cameraTransformData)
+        {
+            return renderedEyes.TryGetValue(self.GetInstanceID(), out var hashSet) && hashSet.Contains((cameraTransformData, current.stereoActiveEye));
         }
 
         private static void RenderMultiPass(MirrorRendererSO self, Camera current, float stereoCameraEyeOffset, Quaternion camRotation, Vector3 reflectionPlanePos, Vector3 reflectionPlaneNormal)
