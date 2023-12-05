@@ -15,7 +15,7 @@ namespace AssetBundleLoadingTools.Patches
     internal class MirrorRendererSOMultiPass
     {
         private static readonly MethodInfo CreateOrUpdateMirrorCamera = AccessTools.DeclaredMethod(typeof(MirrorRendererSO), nameof(MirrorRendererSO.CreateOrUpdateMirrorCamera));
-        private static readonly MethodInfo XRSettingsGetRenderMode = AccessTools.DeclaredPropertyGetter(typeof(XRSettings), nameof(XRSettings.stereoRenderingMode));
+        private static readonly MethodInfo XRSettingsGetStereoRenderingMode = AccessTools.DeclaredPropertyGetter(typeof(XRSettings), nameof(XRSettings.stereoRenderingMode));
         private static readonly MethodInfo CameraGetStereoEnabled = AccessTools.DeclaredPropertyGetter(typeof(Camera), nameof(Camera.stereoEnabled));
         private static readonly MethodInfo GLSetInvertCulling = AccessTools.DeclaredPropertySetter(typeof(GL), nameof(GL.invertCulling));
         private static readonly MethodInfo GLFlushMethod = AccessTools.DeclaredMethod(typeof(GL), nameof(GL.Flush));
@@ -25,13 +25,33 @@ namespace AssetBundleLoadingTools.Patches
 
         internal static readonly Dictionary<int, HashSet<(MirrorRendererSO.CameraTransformData, Camera.MonoOrStereoscopicEye)>> renderedEyes = new();
 
-        [HarmonyPatch(nameof(MirrorRendererSO.GetMirrorTexture))]
+        [HarmonyPatch(nameof(MirrorRendererSO.RenderMirrorTexture))]
         [HarmonyTranspiler]
-        public static IEnumerable<CodeInstruction> GetMirrorTextureTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
+        public static IEnumerable<CodeInstruction> RenderMirrorTextureTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
         {
-            Label? useMonoTextureSizeLabel = null;
-
             return new CodeMatcher(instructions, generator)
+                // make stereoEnabled take into account multi pass
+                // stereoEnabled = current.stereoEnabled && XRSettings.stereoRenderingMode != StereoRenderingMode.MultiPass
+                .MatchForward(true,
+                    new CodeMatch(OpCodes.Ldloc_0),
+                    new CodeMatch(i => i.Calls(CameraGetStereoEnabled)),
+                    new CodeMatch(i => i.SetsLocal(4))) // bool stereoEnabled
+                .ThrowIfInvalid("Set stereoEnabled not found")
+                .Insert(new CodeInstruction(OpCodes.Ldc_I4_0))
+                .CreateLabel(out Label setStereoEnabledFalse)
+                .Advance(2)
+                .CreateLabel(out Label afterSetStereoEnabled)
+                .Advance(-2)
+                .Insert(
+                    new CodeInstruction(OpCodes.Brfalse, setStereoEnabledFalse), // set stereoEnabled to false immediately (short circuit)
+                    new CodeInstruction(OpCodes.Call, XRSettingsGetStereoRenderingMode),
+                    new CodeInstruction(OpCodes.Ldc_I4_0), // StereoRenderingMode.MultiPass
+                    new CodeInstruction(OpCodes.Ceq),
+                    new CodeInstruction(OpCodes.Ldc_I4_0), // compare again so we get (XRSettings.stereoRenderingMode == StereoRenderingMode.MultiPass) == false => XRSettings.stereoRenderingMode != StereoRenderingMode.MultiPass
+                    new CodeInstruction(OpCodes.Ceq),
+                    new CodeInstruction(OpCodes.Stloc, 4),
+                    new CodeInstruction(OpCodes.Br, afterSetStereoEnabled)) // skip the part that sets stereoEnabled to false
+
                 // change the render texture existence check so it only returns if the stereoActiveEye was already rendered
                 .MatchForward(false,
                     new CodeMatch(OpCodes.Ldarg_0),
@@ -53,18 +73,6 @@ namespace AssetBundleLoadingTools.Patches
                     new CodeInstruction(OpCodes.Call, CheckEyeAlreadyRenderedMethod),
                     new CodeInstruction(OpCodes.Brfalse, afterCreateRenderTextureLabel))
 
-                // don't make the render texture double wide when multi-pass is enabled
-                .MatchForward(true,
-                    new CodeMatch(i => i.LoadsLocal(4)), // bool stereoEnabled
-                    new CodeMatch(i => i.Branches(out useMonoTextureSizeLabel)))
-                .ThrowIfInvalid("Render texture creation stereoEnabled branch not found")
-                .Advance(1)
-                .Insert(
-                    new CodeInstruction(OpCodes.Call, XRSettingsGetRenderMode),
-                    new CodeInstruction(OpCodes.Ldc_I4_0), // StereoRenderingMode.MultiPass
-                    new CodeInstruction(OpCodes.Ceq),
-                    new CodeInstruction(OpCodes.Brtrue, useMonoTextureSizeLabel))
-
                 // register rendered eye after rendering
                 .MatchForward(false,
                     new CodeMatch(i => i.Calls(GLSetInvertCulling)), // right after the if (stereoEnabled) { ... } else { ... },
@@ -77,7 +85,7 @@ namespace AssetBundleLoadingTools.Patches
                     new CodeInstruction(OpCodes.Ldloc, 6), // CameraTransformData cameraTransformData
                     new CodeInstruction(OpCodes.Call, AddEyeRenderedMethod))
 
-                // add our branch when XRSettings.stereoRenderingMode is MultiPass
+                // add our branch when XRSettings.stereoRenderingMode is MultiPass inside the current.stereoEnabled if statement
                 .MatchBack(true,
                     new CodeMatch(i => i.Calls(CameraGetStereoEnabled)), // got back to the beginning of the if statement
                     new CodeMatch(i => i.Branches(out Label? _)))
@@ -85,7 +93,7 @@ namespace AssetBundleLoadingTools.Patches
                 .Advance(1)
                 .CreateLabel(out Label ifNotMultiPassLabel) // create label to keep existing logic if not multi-pass
                 .Insert(
-                    new CodeInstruction(OpCodes.Call, XRSettingsGetRenderMode),
+                    new CodeInstruction(OpCodes.Call, XRSettingsGetStereoRenderingMode),
                     new CodeInstruction(OpCodes.Ldc_I4_0), // StereoRenderingMode.MultiPass
                     new CodeInstruction(OpCodes.Ceq),
                     new CodeInstruction(OpCodes.Brfalse, ifNotMultiPassLabel),
@@ -128,6 +136,7 @@ namespace AssetBundleLoadingTools.Patches
 
         private static void RenderMultiPass(MirrorRendererSO self, Camera current, float stereoCameraEyeOffset, Quaternion camRotation, Vector3 reflectionPlanePos, Vector3 reflectionPlaneNormal)
         {
+            Debug.Log("RenderMultiPass");
             Vector3 targetPosition = current.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, 0), current.stereoActiveEye);
             Matrix4x4 stereoProjectionMatrix = current.GetStereoProjectionMatrix(current.stereoActiveEye == Camera.MonoOrStereoscopicEye.Right ? Camera.StereoscopicEye.Right : Camera.StereoscopicEye.Left);
             self._bloomPrePassRenderer.SetCustomStereoCameraEyeOffset(current.stereoActiveEye == Camera.MonoOrStereoscopicEye.Right ? -stereoCameraEyeOffset : stereoCameraEyeOffset);

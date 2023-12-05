@@ -6,6 +6,7 @@ using HarmonyLib;
 using IPA;
 using IPA.Config.Stores;
 using System.Threading;
+using UnityEngine.XR;
 using IPALogger = IPA.Logging.Logger;
 
 namespace AssetBundleLoadingTools
