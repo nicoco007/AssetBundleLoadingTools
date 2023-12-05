@@ -66,6 +66,7 @@ namespace AssetBundleLoadingTools.Utilities
         {
             if (!Plugin.Config.EnableShaderReplacement)
             {
+                // TODO: should this return something indicating replacement didn't happen?
                 return new ShaderReplacementInfo(true);
             }
 
@@ -113,6 +114,12 @@ namespace AssetBundleLoadingTools.Utilities
 
         private static ShaderReplacementInfo ReplaceShaders(List<Material> materials, List<CompiledShaderInfo> shaderInfos)
         {
+            if (!Plugin.Config.EnableShaderReplacement)
+            {
+                // TODO: should this return something indicating replacement didn't happen?
+                return new ShaderReplacementInfo(true);
+            }
+
             if (shaderInfos.All(x => x.IsSupported))
             {
                 // TODO: explicit override for "force compiled" stuff
