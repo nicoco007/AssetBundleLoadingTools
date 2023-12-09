@@ -64,7 +64,7 @@ namespace AssetBundleLoadingTools
         {
             harmony.PatchAll();
 
-            BSMLSettings.instance.AddSettingsMenu("Asset Bundles", "AssetBundleLoadingTools.UI.settings.bsml", settingsHost);
+            BSMLSettings.instance.AddSettingsMenu("Asset Bundles", "AssetBundleLoadingTools.UI.Settings.bsml", settingsHost);
         }
 
         [OnExit]
