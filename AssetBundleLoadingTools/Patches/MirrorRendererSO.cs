@@ -136,7 +136,6 @@ namespace AssetBundleLoadingTools.Patches
 
         private static void RenderMultiPass(MirrorRendererSO self, Camera current, float stereoCameraEyeOffset, Quaternion camRotation, Vector3 reflectionPlanePos, Vector3 reflectionPlaneNormal)
         {
-            Debug.Log("RenderMultiPass");
             Vector3 targetPosition = current.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, 0), current.stereoActiveEye);
             Matrix4x4 stereoProjectionMatrix = current.GetStereoProjectionMatrix(current.stereoActiveEye == Camera.MonoOrStereoscopicEye.Right ? Camera.StereoscopicEye.Right : Camera.StereoscopicEye.Left);
             self._bloomPrePassRenderer.SetCustomStereoCameraEyeOffset(current.stereoActiveEye == Camera.MonoOrStereoscopicEye.Right ? -stereoCameraEyeOffset : stereoCameraEyeOffset);
