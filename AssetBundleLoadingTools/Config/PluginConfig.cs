@@ -1,8 +1,11 @@
-﻿using UnityEngine.XR.OpenXR;
+﻿using System.Runtime.CompilerServices;
+using UnityEngine.XR.OpenXR;
+
+[assembly: InternalsVisibleTo(IPA.Config.Stores.GeneratedStore.AssemblyVisibilityTarget)]
 
 namespace AssetBundleLoadingTools.Config
 {
-    public class PluginConfig
+    internal class PluginConfig
     {
         public virtual bool ShaderDebugging { get; set; } = true;
 

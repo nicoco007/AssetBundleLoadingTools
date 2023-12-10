@@ -15,21 +15,15 @@ namespace AssetBundleLoadingTools.Core
 {
     internal class ShaderBundleLoader
     {
+        private readonly List<string> fileExtensions = new List<string>() { "*.shaderbundle", "*.shaderbundl" };
+        private List<ShaderBundleManifest> manifests = new();
+        private int maxWebBundleLoadTimeoutMs = 30000;
+
         public static ShaderBundleLoader Instance { get; private set; } = new();
 
-        public Shader? InvalidShader = null;
-        public bool WebBundlesLoaded = false;
-        private readonly List<string> _fileExtensions = new List<string>() { "*.shaderbundle", "*.shaderbundl" };
-        private List<ShaderBundleManifest> _manifests = new();
-        private int _maxWebBundleLoadTimeoutMs = 30000;
+        public Shader? InvalidShader { get; private set; } = null;
 
-        public ShaderBundleLoader() 
-        {
-            if (!Directory.Exists(Constants.ShaderBundlePath))
-            {
-                Directory.CreateDirectory(Constants.ShaderBundlePath);
-            }
-        }
+        public bool WebBundlesLoaded { get; private set; } = false;
 
         // This ideally should not ever be called! but we need a 
         public void LoadAllBundles()
@@ -37,7 +31,7 @@ namespace AssetBundleLoadingTools.Core
             Plugin.Log.Info("Loading shaderbundles...");
 
             List<string> files = new();
-            foreach (var fileExtension in _fileExtensions)
+            foreach (var fileExtension in fileExtensions)
             {
                 files.AddRange(Directory.GetFiles(Constants.ShaderBundlePath, fileExtension));
             }
@@ -54,10 +48,10 @@ namespace AssetBundleLoadingTools.Core
                 manifest.Path = file;
                 manifest.AssetBundle = bundle;
 
-                _manifests.Add(manifest);
+                manifests.Add(manifest);
             }
 
-            foreach (var manifest in _manifests)
+            foreach (var manifest in manifests)
             {
                 foreach (var shader in manifest.ShadersByBundlePath.Values)
                 {
@@ -71,14 +65,20 @@ namespace AssetBundleLoadingTools.Core
                 if (InvalidShader != null) break;
             }
 
-            Plugin.Log.Info($"Loaded {_manifests.Count} manifests containing {_manifests.SelectMany(x => x.ShadersByBundlePath).ToList().Count} shaders.");
+            Plugin.Log.Info($"Loaded {manifests.Count} manifests containing {manifests.SelectMany(x => x.ShadersByBundlePath).ToList().Count} shaders.");
         }
 
         // will be awaited by the async ShaderRepair methods; sync methods aren't so lucky
-        public async void LoadExtraWebBundlesAsync()
+        public async Task LoadExtraWebBundlesAsync()
         {
+            if (!Plugin.Config.DownloadNewBundles)
+            {
+                WebBundlesLoaded = true;
+                return;
+            }
+
             List<string> files = new();
-            foreach (var fileExtension in _fileExtensions)
+            foreach (var fileExtension in fileExtensions)
             {
                 files.AddRange(Directory.GetFiles(Constants.ShaderBundlePath, fileExtension));
             }
@@ -104,10 +104,10 @@ namespace AssetBundleLoadingTools.Core
                 manifest.Path = file;
                 manifest.AssetBundle = bundle;
 
-                _manifests.Add(manifest);
+                manifests.Add(manifest);
             }
 
-            foreach(var manifest in _manifests)
+            foreach(var manifest in manifests)
             {
                 if (InvalidShader != null) break;
 
@@ -121,7 +121,7 @@ namespace AssetBundleLoadingTools.Core
                 }
             }
 
-            Plugin.Log.Info($"(Web Bundles) Loaded {_manifests.Count} manifests containing {_manifests.SelectMany(x => x.ShadersByBundlePath).ToList().Count} shaders.");
+            Plugin.Log.Info($"(Web Bundles) Loaded {manifests.Count} manifests containing {manifests.SelectMany(x => x.ShadersByBundlePath).ToList().Count} shaders.");
 
             WebBundlesLoaded = true;
         }
@@ -134,7 +134,7 @@ namespace AssetBundleLoadingTools.Core
                 await Task.Delay(10);
                 totalMsWaited += 10;
                 
-                if(totalMsWaited > _maxWebBundleLoadTimeoutMs)
+                if(totalMsWaited > maxWebBundleLoadTimeoutMs)
                 {
                     WebBundlesLoaded = true; // probably broken; exit condition just in case the web request has something HORRIBLE happen
                     break;
@@ -149,7 +149,7 @@ namespace AssetBundleLoadingTools.Core
             ShaderMatchInfo? closestMatch = null;
             ShaderBundleManifest? closestManifest = null;
 
-            foreach(var manifest in _manifests)
+            foreach(var manifest in manifests)
             {
                 foreach(var shader in manifest.ShadersByBundlePath.Values)
                 {
@@ -182,7 +182,7 @@ namespace AssetBundleLoadingTools.Core
             ShaderMatchInfo? closestMatch = null;
             ShaderBundleManifest? closestManifest = null;
 
-            foreach (var manifest in _manifests)
+            foreach (var manifest in manifests)
             {
                 foreach (var shader in manifest.ShadersByBundlePath.Values)
                 {

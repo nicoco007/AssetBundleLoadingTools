@@ -8,6 +8,7 @@ using IPA;
 using IPA.Config.Stores;
 using SiraUtil.Zenject;
 using System.Threading;
+using System.Threading.Tasks;
 using IPALogger = IPA.Logging.Logger;
 
 namespace AssetBundleLoadingTools
@@ -51,15 +52,7 @@ namespace AssetBundleLoadingTools
             // "The AssetBundle 'IO.Stream' can't be loaded because another AssetBundle with the same files is already loaded."
             // Completely unavoidable even if you JUST started loading - unity REALLY does not like you trying to load assetbundles with the same name (even if the files are completely different)
             ShaderBundleLoader.Instance.LoadAllBundles();
-
-            if (Config.DownloadNewBundles)
-            {
-                ShaderBundleLoader.Instance.LoadExtraWebBundlesAsync();
-            }
-            else
-            {
-                ShaderBundleLoader.Instance.WebBundlesLoaded = true;
-            }
+            ShaderBundleLoader.Instance.LoadExtraWebBundlesAsync().ContinueWith(task => Log.Critical(task.Exception), TaskContinuationOptions.OnlyOnFaulted);
         }
 
         [OnStart]
