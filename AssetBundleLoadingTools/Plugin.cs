@@ -1,12 +1,13 @@
 ﻿using AssetBundleLoadingTools.Config;
 using AssetBundleLoadingTools.Core;
+using AssetBundleLoadingTools.Installers;
 using AssetBundleLoadingTools.UI;
 using BeatSaberMarkupLanguage.Settings;
 using HarmonyLib;
 using IPA;
 using IPA.Config.Stores;
+using SiraUtil.Zenject;
 using System.Threading;
-using UnityEngine.XR;
 using IPALogger = IPA.Logging.Logger;
 
 namespace AssetBundleLoadingTools
@@ -27,13 +28,15 @@ namespace AssetBundleLoadingTools
         internal static PluginConfig Config { get; private set; } = null!;
         private static Timer? _debuggerWriteTimer { get; set; }
 
-        private SettingsHost settingsHost = new();
+        private SettingsHost? settingsHost;
 
         [Init]
-        public void Init(IPALogger logger, IPA.Config.Config config)
+        public void Init(IPALogger logger, IPA.Config.Config config, Zenjector zenjector)
         {
             Log = logger;
             Config = config.Generated<PluginConfig>();
+
+            zenjector.Install<MainMenuInstaller>(Location.Menu);
 
             if (Config.ShaderDebugging)
             {
@@ -64,6 +67,7 @@ namespace AssetBundleLoadingTools
         {
             harmony.PatchAll();
 
+            settingsHost = new SettingsHost();
             BSMLSettings.instance.AddSettingsMenu("Asset Bundles", "AssetBundleLoadingTools.UI.Settings.bsml", settingsHost);
         }
 
@@ -74,6 +78,7 @@ namespace AssetBundleLoadingTools
             harmony.UnpatchSelf();
 
             BSMLSettings.instance.RemoveSettingsMenu(settingsHost);
+            settingsHost = null;
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using AssetBundleLoadingTools.Core;
 using AssetBundleLoadingTools.Models.Shaders;
+using AssetBundleLoadingTools.UI;
 using IPA.Utilities;
 using System;
 using System.Collections.Generic;
@@ -64,12 +65,6 @@ namespace AssetBundleLoadingTools.Utilities
 
         private static async Task<ShaderReplacementInfo> ReplaceShadersAsync(List<Material> materials, List<CompiledShaderInfo> shaderInfos)
         {
-            if (!Plugin.Config.EnableShaderReplacement)
-            {
-                // TODO: should this return something indicating replacement didn't happen?
-                return new ShaderReplacementInfo(true);
-            }
-
             if (shaderInfos.All(x => x.IsSupported))
             {
                 // TODO: explicit override for "force compiled" stuff
@@ -97,7 +92,7 @@ namespace AssetBundleLoadingTools.Utilities
                     {
                         material.shader = replacement.Shader;
                     }
-                    else
+                    else if (!Plugin.Config.ShowUnsupportedShaders && !Plugin.Config.EnableMultiPassRendering)
                     {
                         material.shader = ShaderBundleLoader.Instance.InvalidShader;
                     }
@@ -109,17 +104,16 @@ namespace AssetBundleLoadingTools.Utilities
                 }
             }
 
+            if (missingShaderNames.Any())
+            {
+                ShowMultiPassModal();
+            }
+
             return new ShaderReplacementInfo(missingShaderNames.Count == 0, missingShaderNames);
         }
 
         private static ShaderReplacementInfo ReplaceShaders(List<Material> materials, List<CompiledShaderInfo> shaderInfos)
         {
-            if (!Plugin.Config.EnableShaderReplacement)
-            {
-                // TODO: should this return something indicating replacement didn't happen?
-                return new ShaderReplacementInfo(true);
-            }
-
             if (shaderInfos.All(x => x.IsSupported))
             {
                 // TODO: explicit override for "force compiled" stuff
@@ -148,7 +142,7 @@ namespace AssetBundleLoadingTools.Utilities
                     {
                         material.shader = replacement.Shader;
                     }
-                    else
+                    else if (!Plugin.Config.ShowUnsupportedShaders && !Plugin.Config.EnableMultiPassRendering)
                     {
                         material.shader = ShaderBundleLoader.Instance.InvalidShader;
                     }
@@ -158,6 +152,11 @@ namespace AssetBundleLoadingTools.Utilities
                 {
                     ShaderDebugger.AddInfoToDebugging(new ShaderDebugInfo(shaderInfo, replacementMatchInfo));
                 }
+            }
+
+            if (missingShaderNames.Any())
+            {
+                ShowMultiPassModal();
             }
 
             return new ShaderReplacementInfo(missingShaderNames.Count == 0, missingShaderNames);
@@ -219,6 +218,11 @@ namespace AssetBundleLoadingTools.Utilities
             // The actual necessary parameters you would need to send to the web api:
             // Hash, List<Shader> = (ShaderName, List<Properties>)
             // Properties list is very important because some people edit shaders with the same name to have slightly different properties based on usecase
+        }
+
+        private static void ShowMultiPassModal()
+        {
+            ModalsController.ShowMultiPassModalAsync().ContinueWith(task => Plugin.Log.Critical(task.Exception), TaskContinuationOptions.OnlyOnFaulted);
         }
     }
 }

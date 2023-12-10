@@ -1,21 +1,17 @@
-﻿using System.ComponentModel;
-
-namespace AssetBundleLoadingTools.UI
+﻿namespace AssetBundleLoadingTools.UI
 {
     internal class SettingsHost
     {
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        internal bool enableShaderReplacement
-        {
-            get => Plugin.Config.EnableShaderReplacement;
-            set => Plugin.Config.EnableShaderReplacement = value;
-        }
-
-        internal bool enableMultiPassRendering
+        internal bool EnableMultiPassRendering
         {
             get => Plugin.Config.EnableMultiPassRendering;
             set => Plugin.Config.EnableMultiPassRendering = value;
+        }
+
+        internal bool ShowUnsupportedShaders
+        {
+            get => Plugin.Config.ShowUnsupportedShaders;
+            set => Plugin.Config.ShowUnsupportedShaders = value;
         }
     }
 }
