@@ -14,6 +14,7 @@ namespace AssetBundleLoadingTools.UI
 
         private static TaskCompletionSource<VoidResult> controllerAvailableTaskCompletionSource = new();
 
+        private HierarchyManager hierarchyManager = null!;
         private MenuTransitionsHelper menuTransitionsHelper = null!;
 
         [UIComponent("multi-pass-modal")]
@@ -37,8 +38,9 @@ namespace AssetBundleLoadingTools.UI
         }
 
         [Inject]
-        protected void Construct(MenuTransitionsHelper menuTransitionsHelper)
+        protected void Construct(HierarchyManager hierarchyManager, MenuTransitionsHelper menuTransitionsHelper)
         {
+            this.hierarchyManager = hierarchyManager;
             this.menuTransitionsHelper = menuTransitionsHelper;
         }
 
@@ -46,7 +48,7 @@ namespace AssetBundleLoadingTools.UI
         protected void PostParse()
         {
             // create empty modal views so we can block the other screens
-            var screenSystem = gameObject.GetComponentInParent<ScreenSystem>();
+            var screenSystem = hierarchyManager._screenSystem;
             leftScreenDummyModal = CreateDummyModal(screenSystem.leftScreen);
             rightScreenDummyModal = CreateDummyModal(screenSystem.rightScreen);
 
