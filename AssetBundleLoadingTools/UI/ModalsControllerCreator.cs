@@ -22,6 +22,7 @@ namespace AssetBundleLoadingTools.UI
         {
             GameObject gameObject = new($"{nameof(AssetBundleLoadingTools)} {nameof(ModalsController)}");
             gameObject.transform.SetParent(hierarchyManager._screenSystem.mainScreen.transform, false);
+            gameObject.SetActive(false);
 
             var modalsController = container.InstantiateComponent<ModalsController>(gameObject);
 
@@ -30,6 +31,8 @@ namespace AssetBundleLoadingTools.UI
             {
                 BSMLParser.instance.Parse(streamReader.ReadToEnd(), gameObject, modalsController);
             }
+
+            gameObject.SetActive(true);
         }
     }
 }
