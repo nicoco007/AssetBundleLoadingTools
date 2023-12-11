@@ -126,16 +126,24 @@ namespace AssetBundleLoadingTools.UI
             Hide(multiPassModal!);
         }
 
-        private void Start()
+        private void Awake()
         {
             Instance = this;
+        }
+
+        private void OnEnable()
+        {
             controllerAvailableTaskCompletionSource.SetResult(default);
+        }
+
+        private void OnDisable()
+        {
+            controllerAvailableTaskCompletionSource = new();
         }
 
         private void OnDestroy()
         {
             Instance = null;
-            controllerAvailableTaskCompletionSource = new();
         }
     }
 }
