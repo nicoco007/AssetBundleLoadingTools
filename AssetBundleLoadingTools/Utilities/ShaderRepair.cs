@@ -65,7 +65,7 @@ namespace AssetBundleLoadingTools.Utilities
 
         private static async Task<ShaderReplacementInfo> ReplaceShadersAsync(List<Material> materials, List<CompiledShaderInfo> shaderInfos)
         {
-            if (shaderInfos.All(x => x.IsSupported))
+            if (Plugin.Config.EnableMultiPassRendering || shaderInfos.All(x => x.IsSupported))
             {
                 // TODO: explicit override for "force compiled" stuff
                 // TODO: explicit override for BS uber only/standard only/etc
@@ -92,7 +92,7 @@ namespace AssetBundleLoadingTools.Utilities
                     {
                         material.shader = replacement.Shader;
                     }
-                    else if (!Plugin.Config.ShowUnsupportedShaders && !Plugin.Config.EnableMultiPassRendering)
+                    else if (!Plugin.Config.ShowUnsupportedShaders)
                     {
                         material.shader = ShaderBundleLoader.Instance.InvalidShader;
                     }
@@ -114,7 +114,7 @@ namespace AssetBundleLoadingTools.Utilities
 
         private static ShaderReplacementInfo ReplaceShaders(List<Material> materials, List<CompiledShaderInfo> shaderInfos)
         {
-            if (shaderInfos.All(x => x.IsSupported))
+            if (Plugin.Config.EnableMultiPassRendering || shaderInfos.All(x => x.IsSupported))
             {
                 // TODO: explicit override for "force compiled" stuff
                 // TODO: explicit override for BS uber only/standard only/etc
@@ -142,7 +142,7 @@ namespace AssetBundleLoadingTools.Utilities
                     {
                         material.shader = replacement.Shader;
                     }
-                    else if (!Plugin.Config.ShowUnsupportedShaders && !Plugin.Config.EnableMultiPassRendering)
+                    else if (!Plugin.Config.ShowUnsupportedShaders)
                     {
                         material.shader = ShaderBundleLoader.Instance.InvalidShader;
                     }
