@@ -21,7 +21,7 @@ namespace AssetBundleLoadingTools.UI
         public void Initialize()
         {
             GameObject gameObject = new($"{nameof(AssetBundleLoadingTools)} {nameof(ModalsController)}");
-            gameObject.transform.SetParent(hierarchyManager._screenSystem.mainScreen.transform, false);
+            gameObject.transform.SetParent(hierarchyManager.transform, false);
             gameObject.SetActive(false);
 
             var modalsController = container.InstantiateComponent<ModalsController>(gameObject);

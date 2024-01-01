@@ -1,10 +1,14 @@
 ﻿using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.Attributes;
 using HMUI;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
+using Screen = HMUI.Screen;
 
 namespace AssetBundleLoadingTools.UI
 {
@@ -20,8 +24,10 @@ namespace AssetBundleLoadingTools.UI
         [UIComponent("multi-pass-modal")]
         private ModalView? multiPassModal;
 
-        private ModalView? leftScreenDummyModal;
-        private ModalView? rightScreenDummyModal;
+        private ModalView? modalTemplate;
+
+        private readonly Stack<ModalView> modals = new();
+        private readonly List<ModalView> visibleModals = new();
 
         internal static ModalsController? Instance { get; private set; }
 
@@ -47,63 +53,69 @@ namespace AssetBundleLoadingTools.UI
         [UIAction("#post-parse")]
         protected void PostParse()
         {
-            // create empty modal views so we can block the other screens
-            var screenSystem = hierarchyManager._screenSystem;
-            leftScreenDummyModal = CreateDummyModal(screenSystem.leftScreen);
-            rightScreenDummyModal = CreateDummyModal(screenSystem.rightScreen);
-
             var contentSizeFitter = multiPassModal!.gameObject.AddComponent<ContentSizeFitter>();
             contentSizeFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
             contentSizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             multiPassModal.gameObject.AddComponent<StackLayoutGroup>();
+
+            var gameObject = new GameObject("DummyModalTemplate");
+            gameObject.transform.SetParent(transform, false);
+            gameObject.SetActive(false);
+            modalTemplate = gameObject.AddComponent(multiPassModal)!;
         }
 
-        private ModalView CreateDummyModal(HMUI.Screen screen)
+        private ModalView CreateDummyModal()
         {
             var gameObject = new GameObject("DummyModal");
             gameObject.SetActive(false);
-            gameObject.transform.SetParent(screen.transform, false);
-            return gameObject.AddComponent(multiPassModal)!;
+            return gameObject.AddComponent(modalTemplate)!;
         }
 
         internal void Show(ModalView mainScreenModal)
         {
-            if (mainScreenModal != null)
+            if (mainScreenModal == null)
             {
-                mainScreenModal._viewIsValid = false;
-                mainScreenModal.Show(true, true);
+                throw new ArgumentNullException(nameof(mainScreenModal));
             }
 
-            if (leftScreenDummyModal != null)
+            List<Screen> screens = hierarchyManager.GetComponentsInChildren<Screen>().Where(s => s._rootViewController != null).ToList();
+            Screen mainScreen = screens.FirstOrDefault(s => s.name.Contains("Main"));
+
+            if (mainScreen == null)
             {
-                leftScreenDummyModal._viewIsValid = false;
-                leftScreenDummyModal.Show(true, true);
+                mainScreen = screens.First();
             }
 
-            if (rightScreenDummyModal != null)
+            Plugin.Log.Notice($"Displaying modal on screen {mainScreen.name}");
+
+            foreach (Screen screen in screens.Where(s => s != mainScreen))
             {
-                rightScreenDummyModal._viewIsValid = false;
-                rightScreenDummyModal.Show(true, true);
+                ModalView modal = modals.Count > 0 ? modals.Pop() : CreateDummyModal();
+                modal.transform.SetParent(screen.transform, false);
+                modal._viewIsValid = false;
+                modal._animateParentCanvas = true;
+                modal.Show(true, true);
+
+                visibleModals.Add(modal);
             }
+
+            mainScreenModal.transform.SetParent(mainScreen.transform, false);
+            mainScreenModal._viewIsValid = false;
+            mainScreenModal._animateParentCanvas = true; // this gets set to false improperly sometimes
+            mainScreenModal.Show(true, true);
         }
 
         internal void Hide(ModalView mainScreenModal)
         {
-            if (mainScreenModal != null)
+            mainScreenModal.Hide(true);
+
+            foreach (var modal in visibleModals)
             {
-                mainScreenModal.Hide(true);
+                modal.Hide(true, () => modals.Push(modal));
             }
 
-            if (leftScreenDummyModal != null)
-            {
-                leftScreenDummyModal.Hide(true);
-            }
-
-            if (rightScreenDummyModal != null)
-            {
-                rightScreenDummyModal.Hide(true);
-            }
+            visibleModals.Clear();
         }
 
         protected void YesButtonClicked()
