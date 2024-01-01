@@ -18,6 +18,8 @@ namespace AssetBundleLoadingTools.UI
 
         private static TaskCompletionSource<VoidResult> controllerAvailableTaskCompletionSource = new();
 
+        private readonly Dictionary<Screen, ModalView> dummyModals = new();
+
         private HierarchyManager hierarchyManager = null!;
         private MenuTransitionsHelper menuTransitionsHelper = null!;
 
@@ -25,9 +27,6 @@ namespace AssetBundleLoadingTools.UI
         private ModalView? multiPassModal;
 
         private ModalView? modalTemplate;
-
-        private readonly Dictionary<Screen, ModalView> dummyModals = new();
-
         private ModalView? visibleModal;
 
         internal static ModalsController? Instance { get; private set; }
