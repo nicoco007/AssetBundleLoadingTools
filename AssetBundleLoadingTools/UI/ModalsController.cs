@@ -16,7 +16,7 @@ namespace AssetBundleLoadingTools.UI
     {
         private struct VoidResult { }
 
-        private static TaskCompletionSource<VoidResult> controllerAvailableTaskCompletionSource = new();
+        private static TaskCompletionSource<VoidResult> instanceAvailableTaskCompletionSource = new();
 
         private readonly Dictionary<Screen, ModalView> dummyModals = new();
 
@@ -38,9 +38,9 @@ namespace AssetBundleLoadingTools.UI
                 return;
             }
 
-            await controllerAvailableTaskCompletionSource.Task;
+            await instanceAvailableTaskCompletionSource.Task;
 
-            Instance!.Show(Instance.multiPassModal!);
+            await Instance!.ShowAsync(Instance.multiPassModal!);
         }
 
         [Inject]
@@ -67,29 +67,31 @@ namespace AssetBundleLoadingTools.UI
 
         private ModalView CreateDummyModal()
         {
-            var gameObject = new GameObject("DummyModal");
-            gameObject.SetActive(false);
-            return gameObject.AddComponent(modalTemplate)!;
+            return new GameObject("DummyModal").AddComponent(modalTemplate)!;
         }
 
-        internal void Show(ModalView mainScreenModal)
+        internal async Task ShowAsync(ModalView mainScreenModal)
         {
             if (mainScreenModal == null)
             {
                 throw new ArgumentNullException(nameof(mainScreenModal));
             }
 
-            if (mainScreenModal == visibleModal)
+            if (visibleModal != null)
             {
                 return;
             }
 
-            if (visibleModal != null)
+            visibleModal = mainScreenModal;
+
+            List<Screen> screens;
+
+            // wait for view controllers to be displayed (should only take a few frames max)
+            while (!(screens = hierarchyManager.GetComponentsInChildren<Screen>().Where(s => s._rootViewController != null).ToList()).Any())
             {
-                Hide();
+                await Task.Yield();
             }
 
-            List<Screen> screens = hierarchyManager.GetComponentsInChildren<Screen>().Where(s => s._rootViewController != null).ToList();
             Screen mainScreen = screens.FirstOrDefault(s => s.name.Contains("Main"));
 
             if (mainScreen == null)
@@ -106,21 +108,13 @@ namespace AssetBundleLoadingTools.UI
                     Plugin.Log.Debug($"Creating dummy modal on screen {screen.name}");
 
                     modal = CreateDummyModal();
-                    modal.transform.SetParent(screen.transform, false);
                     dummyModals.Add(screen, modal);
                 }
 
-                modal._viewIsValid = false;
-                modal._animateParentCanvas = true;
-                modal.Show(true, true);
+                ConfigureAndShowModal(modal, screen);
             }
 
-            mainScreenModal.transform.SetParent(mainScreen.transform, false);
-            mainScreenModal._viewIsValid = false;
-            mainScreenModal._animateParentCanvas = true; // this gets set to false improperly sometimes
-            mainScreenModal.Show(true, true);
-
-            visibleModal = mainScreenModal;
+            ConfigureAndShowModal(mainScreenModal, mainScreen);
         }
 
         internal void Hide()
@@ -144,17 +138,12 @@ namespace AssetBundleLoadingTools.UI
 
         protected void NoButtonClicked()
         {
-            HideMultiPassModal();
+            Hide();
         }
 
         protected void DontAskAgainButtonClicked()
         {
             Plugin.Config.ShowMultiPassModal = false;
-            HideMultiPassModal();
-        }
-
-        private void HideMultiPassModal()
-        {
             Hide();
         }
 
@@ -165,17 +154,36 @@ namespace AssetBundleLoadingTools.UI
 
         private void OnEnable()
         {
-            controllerAvailableTaskCompletionSource.SetResult(default);
+            instanceAvailableTaskCompletionSource.SetResult(default);
         }
 
         private void OnDisable()
         {
-            controllerAvailableTaskCompletionSource = new();
+            instanceAvailableTaskCompletionSource = new();
         }
 
         private void OnDestroy()
         {
             Instance = null;
+        }
+
+        private void ConfigureAndShowModal(ModalView modalView, Screen screen)
+        {
+            Transform screenTransform = screen.transform;
+
+            modalView.transform.SetParent(screenTransform, false);
+            modalView._viewIsValid = false;
+            modalView._animateParentCanvas = true; // this gets set to false improperly sometimes
+            modalView.SetupView(screenTransform); // force use of the screen instead of the child view controller
+            modalView.Show(true, true);
+
+            // this kinda sucks but there's no straightforward way to have the ModalView ignore the view controller
+            ViewController viewController = screen.GetComponentInChildren<ViewController>();
+
+            if (viewController != null)
+            {
+                viewController.didDeactivateEvent -= modalView.HandleParentViewControllerDidDeactivate;
+            }
         }
     }
 }
