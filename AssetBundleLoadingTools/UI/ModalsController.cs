@@ -26,8 +26,9 @@ namespace AssetBundleLoadingTools.UI
 
         private ModalView? modalTemplate;
 
-        private readonly Stack<ModalView> modals = new();
-        private readonly List<ModalView> visibleModals = new();
+        private readonly Dictionary<Screen, ModalView> dummyModals = new();
+
+        private ModalView? visibleModal;
 
         internal static ModalsController? Instance { get; private set; }
 
@@ -79,6 +80,16 @@ namespace AssetBundleLoadingTools.UI
                 throw new ArgumentNullException(nameof(mainScreenModal));
             }
 
+            if (mainScreenModal == visibleModal)
+            {
+                return;
+            }
+
+            if (visibleModal != null)
+            {
+                Hide();
+            }
+
             List<Screen> screens = hierarchyManager.GetComponentsInChildren<Screen>().Where(s => s._rootViewController != null).ToList();
             Screen mainScreen = screens.FirstOrDefault(s => s.name.Contains("Main"));
 
@@ -87,35 +98,43 @@ namespace AssetBundleLoadingTools.UI
                 mainScreen = screens.First();
             }
 
-            Plugin.Log.Notice($"Displaying modal on screen {mainScreen.name}");
+            Plugin.Log.Debug($"Displaying modal on screen {mainScreen.name}");
 
             foreach (Screen screen in screens.Where(s => s != mainScreen))
             {
-                ModalView modal = modals.Count > 0 ? modals.Pop() : CreateDummyModal();
-                modal.transform.SetParent(screen.transform, false);
+                if (!dummyModals.TryGetValue(screen, out ModalView? modal) || modal == null)
+                {
+                    Plugin.Log.Debug($"Creating dummy modal on screen {screen.name}");
+
+                    modal = CreateDummyModal();
+                    modal.transform.SetParent(screen.transform, false);
+                    dummyModals.Add(screen, modal);
+                }
+
                 modal._viewIsValid = false;
                 modal._animateParentCanvas = true;
                 modal.Show(true, true);
-
-                visibleModals.Add(modal);
             }
 
             mainScreenModal.transform.SetParent(mainScreen.transform, false);
             mainScreenModal._viewIsValid = false;
             mainScreenModal._animateParentCanvas = true; // this gets set to false improperly sometimes
             mainScreenModal.Show(true, true);
+
+            visibleModal = mainScreenModal;
         }
 
-        internal void Hide(ModalView mainScreenModal)
+        internal void Hide()
         {
-            mainScreenModal.Hide(true);
-
-            foreach (var modal in visibleModals)
+            if (visibleModal != null)
             {
-                modal.Hide(true, () => modals.Push(modal));
+                visibleModal.Hide(true, () => visibleModal = null);
             }
 
-            visibleModals.Clear();
+            foreach (var modal in dummyModals.Values)
+            {
+                modal.Hide(true);
+            }
         }
 
         protected void YesButtonClicked()
@@ -137,7 +156,7 @@ namespace AssetBundleLoadingTools.UI
 
         private void HideMultiPassModal()
         {
-            Hide(multiPassModal!);
+            Hide();
         }
 
         private void Awake()
