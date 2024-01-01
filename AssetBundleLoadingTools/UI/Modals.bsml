@@ -5,7 +5,7 @@
 				rich-text="true"
 				overflow="Masking"
 				wordWrapping="true"
-				text="A model couldn't be loaded on this version of Beat Saber. Multi-pass rendering can increase model compatibility at the cost of performance. Would you like to enable multi-pass rendering? The game will restart to apply the change. You can turn it back off in &lt;i&gt;Settings&lt;/i&gt; &#8594; &lt;i&gt;Mod Settings&lt;/i&gt; &#8594; &lt;i&gt;Asset Bundles&lt;/i&gt;."/>
+				text="A model couldn't be fully loaded on this version of Beat Saber. Multi-pass rendering can improve model compatibility at the cost of performance. Would you like to enable multi-pass rendering? The game will restart to apply the change. You can turn it back off in &lt;i&gt;Settings&lt;/i&gt; &#8594; &lt;i&gt;Mod Settings&lt;/i&gt; &#8594; &lt;i&gt;Asset Bundles&lt;/i&gt;."/>
 			<bg horizontal-fit="Unconstrained" vertical-fit="PreferredSize" anchor-min-x="0" anchor-min-y="0" anchor-max-x="1" anchor-max-y="1" size-delta-x="0" size-delta-y="0">
 				<button text="Yes" horizontal-fit="Unconstrained" anchor-min-x="0" anchor-max-x="0.32" size-delta-x="0" anchor-pos-x="0" anchor-pos-y="0" on-click="YesButtonClicked" />
 				<button text="No" horizontal-fit="Unconstrained" anchor-min-x="0.34" anchor-max-x="0.66" size-delta-x="0" anchor-pos-x="0" anchor-pos-y="0" on-click="NoButtonClicked" />
