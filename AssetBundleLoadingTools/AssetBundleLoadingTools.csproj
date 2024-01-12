@@ -140,7 +140,7 @@
     <EmbeddedResource Include="manifest.json" />
     <EmbeddedResource Include="UI\*.bsml" />
   </ItemGroup>
-	
+    
   <ItemGroup>
     <SourceRoot Include="$(MSBuildThisFileDirectory)/" />
   </ItemGroup>
@@ -151,9 +151,23 @@
     <None Include="Directory.Build.targets" Condition="Exists('Directory.Build.targets')" Visible="false" />
   </ItemGroup>
 
+  <Target Name="Copy Shader Bundles" AfterTargets="CopyToArtifactDestination">
+    <ItemGroup>
+      <ShaderBundleFiles Include="$(ProjectDir)..\ShaderBundles\*.shaderbundle" />
+    </ItemGroup>
+
+    <PropertyGroup>
+      <ArtifactShaderBundlesDir>$(ArtifactDestination)\UserData\AssetBundleLoadingTools\ShaderBundles</ArtifactShaderBundlesDir>
+      <GameShaderBundlesDir>$(GameDirectory)\UserData\AssetBundleLoadingTools\ShaderBundles</GameShaderBundlesDir>
+    </PropertyGroup>
+  
+    <Copy SourceFiles="@(ShaderBundleFiles)" DestinationFolder="$(ArtifactShaderBundlesDir)\%(ShaderBundleFiles.RecursiveDir)" />
+    <Copy SourceFiles="@(ShaderBundleFiles)" DestinationFolder="$(GameShaderBundlesDir)\%(ShaderBundleFiles.RecursiveDir)" Condition="'$(DisableCopyToGame)' != 'True' AND '$(ContinuousIntegrationBuild)' != 'True'" />
+  </Target>
+
   <ItemGroup>
     <PackageReference Include="BeatSaberModdingTools.Tasks">
-      <Version>2.0.0-beta1</Version>
+      <Version>2.0.0-beta6</Version>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
