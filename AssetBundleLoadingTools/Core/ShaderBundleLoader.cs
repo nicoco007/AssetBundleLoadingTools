@@ -15,9 +15,10 @@ namespace AssetBundleLoadingTools.Core
 {
     internal class ShaderBundleLoader
     {
-        private readonly List<string> fileExtensions = new List<string>() { "*.shaderbundle", "*.shaderbundl" };
-        private List<ShaderBundleManifest> manifests = new();
-        private int maxWebBundleLoadTimeoutMs = 30000;
+        private const string fileExtensionFilter = "*.shaderbundle";
+        private const int maxWebBundleLoadTimeoutMs = 30000;
+
+        private readonly List<ShaderBundleManifest> manifests = new();
 
         public static ShaderBundleLoader Instance { get; private set; } = new();
 
@@ -30,13 +31,13 @@ namespace AssetBundleLoadingTools.Core
         {
             Plugin.Log.Info("Loading shaderbundles...");
 
-            List<string> files = new();
-            foreach (var fileExtension in fileExtensions)
+            if (!Directory.Exists(Constants.ShaderBundlePath))
             {
-                files.AddRange(Directory.GetFiles(Constants.ShaderBundlePath, fileExtension));
+                Plugin.Log.Warn("ShaderBundles directory does not exist!");
+                return;
             }
 
-            foreach (var file in files)
+            foreach (var file in Directory.EnumerateFiles(Constants.ShaderBundlePath, fileExtensionFilter))
             {
                 var manifest = ManifestFromZipFile(file);
                 var bundleStream = AssetBundleStreamFromZipFile(file);
@@ -77,14 +78,8 @@ namespace AssetBundleLoadingTools.Core
                 return;
             }
 
-            List<string> files = new();
-            foreach (var fileExtension in fileExtensions)
-            {
-                files.AddRange(Directory.GetFiles(Constants.ShaderBundlePath, fileExtension));
-            }
-
             // Search for web bundles
-            var webBundles = await ShaderBundleWebService.DownloadAllShaderBundles(Constants.ShaderBundlePath, files);
+            var webBundles = await ShaderBundleWebService.DownloadAllShaderBundles(Constants.ShaderBundlePath);
 
             if (webBundles.Count == 0)
             {

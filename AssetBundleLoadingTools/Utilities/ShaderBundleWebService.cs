@@ -57,16 +57,19 @@ namespace AssetBundleLoadingTools.Utilities
             }
         }
 
-        public static async Task<List<string>> DownloadAllShaderBundles(string directory, List<string> downloadedBundlePaths)
+        public static async Task<List<string>> DownloadAllShaderBundles(string directory)
         {
             List<string> bundlePaths = new();
             var webBundles = await GetShaderBundles();
 
             if (webBundles == null) return bundlePaths;
+
+            Directory.CreateDirectory(directory);
+
             foreach (var webBundle in webBundles)
             {
                 var bundlePath = Path.Combine(directory, webBundle);
-                if (downloadedBundlePaths.Any(x => Path.GetFileName(x) == webBundle) || File.Exists(bundlePath)) continue;
+                if (File.Exists(bundlePath)) continue;
 
                 var bytes = await GetShaderBundleBytesFromURL(webBundle);
 
