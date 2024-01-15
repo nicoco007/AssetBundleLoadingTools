@@ -86,7 +86,7 @@ namespace AssetBundleLoadingTools.Utilities
 
                 foreach (var material in materials)
                 {
-                    if (material?.shader == null || material.shader != shaderInfo.Shader) continue;
+                    if (material == null || material.shader == null || material.shader != shaderInfo.Shader) continue;
 
                     if (replacement != null)
                     {
@@ -164,7 +164,7 @@ namespace AssetBundleLoadingTools.Utilities
 
         private static List<CompiledShaderInfo> GetShaderInfosFromMaterials(List<Material> materials) 
         {
-            var shaders = materials.Where(x => x?.shader != null).Select(x => x.shader).Distinct();
+            var shaders = materials.Where(m => m != null && m.shader != null).Select(m => m.shader).Distinct();
             List<CompiledShaderInfo> shaderInfos = new();
 
             foreach (var shader in shaders)
