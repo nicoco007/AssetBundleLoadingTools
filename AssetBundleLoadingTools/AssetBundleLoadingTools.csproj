@@ -14,6 +14,9 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <SignAssembly>false</SignAssembly>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>portable</DebugType>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
     
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -148,7 +151,7 @@
     <None Include="Directory.Build.targets" Condition="Exists('Directory.Build.targets')" Visible="false" />
   </ItemGroup>
 
-  <Target Name="Copy Shader Bundles" AfterTargets="CopyToArtifactDestination">
+  <Target Name="CopyShaderBundles" AfterTargets="CopyToArtifactDestination">
     <ItemGroup>
       <ShaderBundleFiles Include="$(ProjectDir)..\ShaderBundles\*.shaderbundle" />
     </ItemGroup>
@@ -160,6 +163,11 @@
   
     <Copy SourceFiles="@(ShaderBundleFiles)" DestinationFolder="$(ArtifactShaderBundlesDir)\%(ShaderBundleFiles.RecursiveDir)" />
     <Copy SourceFiles="@(ShaderBundleFiles)" DestinationFolder="$(GameShaderBundlesDir)\%(ShaderBundleFiles.RecursiveDir)" Condition="'$(DisableCopyToGame)' != 'True' AND '$(ContinuousIntegrationBuild)' != 'True'" />
+  </Target>
+
+  <Target Name="CopyDocumentationFile" AfterTargets="CopyToArtifactDestination">
+    <Copy SourceFiles="$(TargetDir)$(TargetName).xml" DestinationFolder="$(ArtifactDestination)\Plugins" />
+    <Copy SourceFiles="$(TargetDir)$(TargetName).xml" DestinationFolder="$(GameDirectory)\Plugins" />
   </Target>
 
   <ItemGroup>

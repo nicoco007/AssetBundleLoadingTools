@@ -10,8 +10,16 @@ using UnityEngine;
 
 namespace AssetBundleLoadingTools.Utilities
 {
+    /// <summary>
+    /// Helpers to replace legacy shaders on loaded assets.
+    /// </summary>
     public static class ShaderRepair
     {
+        /// <summary>
+        /// Replace legacy shaders on the given <see cref="GameObject"/>.
+        /// </summary>
+        /// <param name="gameObject">The <see cref="GameObject"/> on which to replace shaders.</param>
+        /// <returns>A <see cref="ShaderReplacementInfo"/> instance containing information on the result of the operation.</returns>
         public static ShaderReplacementInfo FixShadersOnGameObject(GameObject gameObject)
         {
             MainThreadCheck();
@@ -22,6 +30,11 @@ namespace AssetBundleLoadingTools.Utilities
             return ReplaceShaders(materials, shaderInfos);
         }
 
+        /// <summary>
+        /// Replace legacy shaders on the given <see cref="GameObject"/> asynchronously.
+        /// </summary>
+        /// <param name="gameObject">The <see cref="GameObject"/> on which to replace shaders.</param>
+        /// <returns>The task object representing the asynchronous operation.</returns>
         public static async Task<ShaderReplacementInfo> FixShadersOnGameObjectAsync(GameObject gameObject)
         {
             MainThreadCheck();
@@ -34,7 +47,18 @@ namespace AssetBundleLoadingTools.Utilities
             return await ReplaceShadersAsync(materials, shaderInfos);
         }
 
+        /// <summary>
+        /// Replace the shader on the given <see cref="Material"/> if it is a legacy shader.
+        /// </summary>
+        /// <param name="material">The material on which the shader will be replaced, if necessary.</param>
+        /// <returns>A <see cref="ShaderReplacementInfo"/> instance containing information on the result of the operation.</returns>
         public static ShaderReplacementInfo FixShaderOnMaterial(Material material) => FixShadersOnMaterials(new List<Material>() { material });
+
+        /// <summary>
+        /// Replace legacy shaders on the given <see cref="Material"/>s.
+        /// </summary>
+        /// <param name="materials">The <see cref="Material"/>s on which to replace shaders.</param>
+        /// <returns>A <see cref="ShaderReplacementInfo"/> instance containing information on the result of the operation.</returns>
         public static ShaderReplacementInfo FixShadersOnMaterials(List<Material> materials)
         {
             MainThreadCheck();
@@ -44,7 +68,18 @@ namespace AssetBundleLoadingTools.Utilities
             return ReplaceShaders(materials, shaderInfos);
         }
 
+        /// <summary>
+        /// Replace the shader on the given <see cref="Material"/> if it is a legacy shader.
+        /// </summary>
+        /// <param name="material">The material on which the shader will be replaced, if necessary.</param>
+        /// <returns>The task object representing the asynchronous operation.</returns>
         public static async Task<ShaderReplacementInfo> FixShaderOnMaterialAsync(Material material) => await FixShadersOnMaterialsAsync(new List<Material>() { material });
+
+        /// <summary>
+        /// Replace legacy shaders on the given <see cref="Material"/>s.
+        /// </summary>
+        /// <param name="materials">The <see cref="Material"/>s on which to replace shaders.</param>
+        /// <returns>The task object representing the asynchronous operation.</returns>
         public static async Task<ShaderReplacementInfo> FixShadersOnMaterialsAsync(List<Material> materials)
         {
             MainThreadCheck();
@@ -176,6 +211,11 @@ namespace AssetBundleLoadingTools.Utilities
             return shaderInfos;
         }
 
+        /// <summary>
+        /// Gets all the materials used by components on the given <see cref="GameObject"/>.
+        /// </summary>
+        /// <param name="gameObject">The <see cref="GameObject"/> on which to look for materials.</param>
+        /// <returns>The list of <see cref="Material"/>s found.</returns>
         public static List<Material> GetMaterialsFromGameObjectRenderers(GameObject gameObject)
         {
             List<Material> sharedMaterials = new();

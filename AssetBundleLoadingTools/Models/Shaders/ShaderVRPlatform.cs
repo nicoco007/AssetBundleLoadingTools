@@ -1,6 +1,6 @@
 ﻿namespace AssetBundleLoadingTools.Models.Shaders
 {
-    public enum ShaderVRPlatform
+    internal enum ShaderVRPlatform
     {
         SinglePass,
         SinglePassInstanced,

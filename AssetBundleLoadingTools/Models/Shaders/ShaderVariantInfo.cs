@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace AssetBundleLoadingTools.Models.Shaders
 {
-    public class ShaderVariantInfo
+    internal class ShaderVariantInfo
     {
         // WARNING: Avoid using variants/keywords for comparison purposes
         // The format is not consistent between loaded shaders

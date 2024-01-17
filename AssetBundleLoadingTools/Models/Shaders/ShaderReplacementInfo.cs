@@ -1,17 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace AssetBundleLoadingTools.Models.Shaders
 {
+    /// <summary>
+    /// Information regarding a shader replacement operation.
+    /// </summary>
     public class ShaderReplacementInfo
     {
-        public bool AllShadersReplaced { get; set; }
-        public List<string> MissingShaderNames { get; set; }
+        /// <summary>
+        /// Gets whether or not all shaders used by the object were replaced.
+        /// </summary>
+        public bool AllShadersReplaced { get; }
 
-        public ShaderReplacementInfo(bool allShadersReplaced, List<string>? missingShaderNames = null) 
+        /// <summary>
+        /// Gets the names of the shaders that could not be replaced.
+        /// </summary>
+        public List<string> MissingShaderNames { get; }
+
+        internal ShaderReplacementInfo(bool allShadersReplaced, List<string>? missingShaderNames = null) 
         {
             if (missingShaderNames == null) missingShaderNames = new List<string>();
 

@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace AssetBundleLoadingTools.Models.Shaders
 {
-    public class CompiledShaderInfo
+    internal class CompiledShaderInfo
     {
         [JsonIgnore]
         public Shader Shader { get; set; }

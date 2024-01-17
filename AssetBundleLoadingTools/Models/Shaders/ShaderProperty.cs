@@ -3,7 +3,7 @@ using UnityEngine.Rendering;
 
 namespace AssetBundleLoadingTools.Models.Shaders
 {
-    public class ShaderProperty
+    internal class ShaderProperty
     {
         public string Name { get; set; }
 
