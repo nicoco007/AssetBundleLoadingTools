@@ -24,7 +24,7 @@ namespace AssetBundleLoadingTools.UI
         private MenuTransitionsHelper menuTransitionsHelper = null!;
 
         [UIComponent("multi-pass-modal")]
-        private ModalView? multiPassModal;
+        protected ModalView? multiPassModal;
 
         private ModalView? modalTemplate;
         private ModalView? visibleModal;

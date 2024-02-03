@@ -1,0 +1,7 @@
+﻿<Project>
+  <Target Name="SetArtifactName" AfterTargets="BSMT_GetProjectInfo">
+    <PropertyGroup>
+      <ArtifactName>$(ProjectName)-v$(PluginVersion)-$(Configuration.ToUpper())</ArtifactName>
+    </PropertyGroup>
+  </Target>
+</Project>
