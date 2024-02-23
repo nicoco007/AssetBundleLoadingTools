@@ -3,9 +3,9 @@
   "id": "AssetBundleLoadingTools",
   "name": "AssetBundleLoadingTools",
   "author": "Bobbie",
-  "version": "1.1.3+dev",
+  "version": "1.1.4+dev",
   "description": "A library with various tools to help safely load AssetBundles and fix legacy shader issues",
-  "gameVersion": "1.34.0",
+  "gameVersion": "1.34.5",
   "dependsOn": {
     "BSIPA": "^4.2.0",
     "BeatSaberMarkupLanguage": "^1.7.0",
