@@ -1,7 +1,8 @@
 ﻿<Project>
   <Target Name="SetArtifactName" AfterTargets="BSMT_GetProjectInfo">
     <PropertyGroup>
-      <ArtifactName>$(ProjectName)-v$(PluginVersion)-$(Configuration.ToUpper())</ArtifactName>
+      <ArtifactName>$(ProjectName)-v$(PluginVersion)</ArtifactName>
+      <ArtifactName Condition="$(Configuration) != 'Release'">$(ArtifactName)-$(Configuration.ToUpper())</ArtifactName>
     </PropertyGroup>
   </Target>
 </Project>

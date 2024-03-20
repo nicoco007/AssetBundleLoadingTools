@@ -21,16 +21,6 @@ jobs:
         access-token: ${{ secrets.PRIVATE_GITHUB_TOKEN }}
         manifest: ${{ github.workspace }}\AssetBundleLoadingTools\manifest.json
 
-    - name: Build Debug
-      id: build-debug
-      run: dotnet build ${{ github.workspace }}\AssetBundleLoadingTools\AssetBundleLoadingTools.csproj -c Debug
-
-    - name: Upload Debug
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ steps.build-debug.outputs.filename }}
-        path: ${{ steps.build-debug.outputs.artifactpath }}
-
     - name: Build Release
       id: build-release
       run: dotnet build ${{ github.workspace }}\AssetBundleLoadingTools\AssetBundleLoadingTools.csproj -c Release
