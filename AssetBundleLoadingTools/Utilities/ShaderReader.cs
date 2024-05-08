@@ -1,10 +1,9 @@
-﻿using System;
+﻿using IPA.Logging;
+using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
+using System.Diagnostics;
 using System.Text;
-using IPA.Utilities;
-using UnityEngine;
-using Object = UnityEngine.Object;
+using Shader = UnityEngine.Shader;
 
 namespace AssetBundleLoadingTools.Utilities
 {
@@ -16,60 +15,81 @@ namespace AssetBundleLoadingTools.Utilities
     {
         private const string TexArrayKeyword = "SV_RenderTargetArrayIndex";
 
-        public static bool DebugMode { get; set; }
+        private static readonly Logger logger = Plugin.Log.GetChildLogger(nameof(ShaderReader));
 
         public static bool IsSinglePassInstancedSupported(Shader shader)
         {
-            return CheckForSemantic(shader, TexArrayKeyword);
+            return CheckForInputSignatureElementUnsafe(shader, TexArrayKeyword);
         }
         
-        public static bool CheckForSemantic(Shader shader, string semanticName)
+        public static unsafe bool CheckForInputSignatureElementUnsafe(Shader shader, string semanticName)
         {
-            var dataBlocks = ReadShaderData(shader);
-            
-            if (dataBlocks.Count < 1)
-            {
-                return false;
-            }
-
-            foreach (var dataBlock in dataBlocks)
-            {
-                var str = Encoding.UTF8.GetString(dataBlock, 0, dataBlock.Length);
-                if (str.Contains(semanticName))
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        public static List<byte[]> ReadShaderData(Shader shader)
-        {
-            var result = new List<byte[]>();
-            
-            var ptr = shader.InvokeMethod<IntPtr, Object>("GetCachedPtr");
+            var ptr = shader.GetCachedPtr();
             if (ptr == IntPtr.Zero)
             {
                 Log("Shader ptr was not valid");
-                return result;
+                return false;
             }
             
             var dataPtrs = ReadShaderDataUnsafe(ptr);
-
             if (dataPtrs.Count < 1)
             {
                 Log("No data ptrs");
+                return false;
             }
 
+            // http://timjones.io/blog/archive/2015/09/02/parsing-direct3d-shader-bytecode#parsing-shader-bytecode
             foreach (var dataPtr in dataPtrs)
             {
-                var data = new byte[1024]; // proper reading later, for now just read some amount and hope it's enough
-                Marshal.Copy(dataPtr, data, 0, data.Length);
-                result.Add(data);
+                Log("dataPtr: " + dataPtr.ToString("x"));
+                int chunkCount = *(int*)(dataPtr + 28);
+                Log("Chunk count: " + chunkCount.ToString("x"));
+                for (int i = 0; i < chunkCount; i++)
+                {
+                    int chunkOffset = *(int*)(dataPtr + 32 + 4 * i);
+                    Log("chunkOffset: " + chunkOffset);
+                    IntPtr chunkPtr = dataPtr + chunkOffset;
+                    Log("chunkPtr: " + chunkPtr.ToString("x"));
+                    string chunkType = Encoding.ASCII.GetString((byte*)chunkPtr, 4);
+                    Log(chunkType);
+
+                    // input signature chunk
+                    if (chunkType == "ISGN")
+                    {
+                        IntPtr chunkDataPtr = chunkPtr + 8;
+                        int elementCount = *(int*)chunkDataPtr;
+                        Log("elementCount: " + elementCount);
+
+                        for (int j = 0; j < elementCount; j++)
+                        {
+                            // each entry is 24 bytes long
+                            int nameOffset = *(int*)(chunkDataPtr + 8 + j * 24);
+                            Log("nameOffset: " + nameOffset);
+                            string? name = null;
+                            IntPtr namePtr = chunkDataPtr + nameOffset;
+                            Log("namePtr: " + namePtr.ToString("x"));
+
+                            for (int k = 0; k < 256; k++)
+                            {
+                                if (*(byte*)(namePtr + k) == 0)
+                                {
+                                    name = Encoding.ASCII.GetString((byte*)namePtr, k);
+                                    break;
+                                }
+                            }
+
+                            Log("name: " + name);
+
+                            if (name == semanticName)
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                }
             }
             
-            return result;
+            return false;
         }
 
         public static unsafe List<IntPtr> ReadShaderDataUnsafe(IntPtr shaderPtr)
@@ -102,7 +122,7 @@ namespace AssetBundleLoadingTools.Utilities
 
                 for (int passIdx = 0; passIdx < numPasses; passIdx++)
                 {
-                    IntPtr passPtr = passListPtr[passIdx*2]; // *2 because of the list structure (each entry is 2 pointers wide)
+                    IntPtr passPtr = passListPtr[passIdx * 2]; // *2 because of the list structure (each entry is 2 pointers wide)
                     Log($"Parsing pass ptr {passPtr.ToString("x")}");
                     IntPtr progPtr = *(IntPtr*)(passPtr+120);
                     if (progPtr == IntPtr.Zero)
@@ -127,7 +147,9 @@ namespace AssetBundleLoadingTools.Utilities
                             Log("Data ptr was null in this subprog");
                             continue;
                         }
-                        
+
+                        Log($"Data: {dataptr.ToString("x")}");
+
                         var shaderType = *(byte*)dataptr;
 
                         if (shaderType > 2)
@@ -135,7 +157,7 @@ namespace AssetBundleLoadingTools.Utilities
                             continue;
                         }
                         
-                        var dxbcAddr = dataptr + (shaderType==1?6:38);
+                        var dxbcAddr = dataptr + (shaderType == 1 ? 6 : 38);
                         var dxbc = *(byte*)dxbcAddr;
 
                         if (dxbc != 0x44)
@@ -143,8 +165,8 @@ namespace AssetBundleLoadingTools.Utilities
                             Log($"No DXBC header for {dataptr.ToString("x")} (type {shaderType:x})");
                         }
 
-                        Log($"Data: {dataptr.ToString("x")}");
-                        result.Add(dataptr);
+                        Log($"Bytecode: {dxbcAddr.ToString("x")}");
+                        result.Add(dxbcAddr);
                     }
                 }
             }
@@ -152,14 +174,10 @@ namespace AssetBundleLoadingTools.Utilities
             return result;
         }
 
-        private static void Log(string message, bool alwaysLog = false)
+        [Conditional("SHADER_DEBUG")]
+        private static void Log(string message)
         {
-            if (!DebugMode && !alwaysLog)
-            {
-                return;
-            }
-
-            Console.WriteLine(message);
+            logger.Debug(message);
         }
     }
 }

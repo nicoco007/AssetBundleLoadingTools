@@ -111,6 +111,7 @@
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>$(GameDirectory)\Beat Saber_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
       <Private>False</Private>
+      <Publicize>True</Publicize>
     </Reference>
     <Reference Include="UnityEngine.UI">
       <HintPath>$(GameDirectory)\Beat Saber_Data\Managed\UnityEngine.UI.dll</HintPath>
