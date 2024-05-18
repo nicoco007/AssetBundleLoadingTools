@@ -249,7 +249,7 @@ namespace AssetBundleLoadingTools.Core
 
             using var manifestStream = new StreamReader(jsonEntry.Open(), Encoding.Default);
             string manifestString = manifestStream.ReadToEnd();
-            ShaderBundleManifest manifest = JsonConvert.DeserializeObject<ShaderBundleManifest>(manifestString);
+            ShaderBundleManifest? manifest = JsonConvert.DeserializeObject<ShaderBundleManifest>(manifestString);
 
             return manifest;
         }
