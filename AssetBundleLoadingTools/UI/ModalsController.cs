@@ -3,7 +3,9 @@ using BeatSaberMarkupLanguage.Attributes;
 using HMUI;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,7 +14,7 @@ using Screen = HMUI.Screen;
 
 namespace AssetBundleLoadingTools.UI
 {
-    internal class ModalsController : MonoBehaviour
+    internal class ModalsController : MonoBehaviour, INotifyPropertyChanged
     {
         private struct VoidResult { }
 
@@ -28,8 +30,17 @@ namespace AssetBundleLoadingTools.UI
 
         private ModalView? modalTemplate;
         private ModalView? visibleModal;
+        private float targetTime;
+
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         internal static ModalsController? Instance { get; private set; }
+
+        private string NoButtonText => Time > 0 ? $"No ({Math.Ceiling(Time)})" : "No";
+
+        private bool Interactable => Time <= 0;
+
+        private float Time => targetTime - UnityEngine.Time.unscaledTime;
 
         internal static async Task ShowMultiPassModalAsync()
         {
@@ -115,6 +126,18 @@ namespace AssetBundleLoadingTools.UI
             }
 
             ConfigureAndShowModal(mainScreenModal, mainScreen);
+
+            targetTime = UnityEngine.Time.unscaledTime + 10;
+
+            NotifyPropertyChanged(nameof(NoButtonText));
+            NotifyPropertyChanged(nameof(Interactable));
+
+            while (Time > 0)
+            {
+                await Task.Yield();
+                NotifyPropertyChanged(nameof(NoButtonText));
+                NotifyPropertyChanged(nameof(Interactable));
+            }
         }
 
         internal void Hide()
@@ -185,6 +208,11 @@ namespace AssetBundleLoadingTools.UI
             {
                 viewController.didDeactivateEvent -= modalView.HandleParentViewControllerDidDeactivate;
             }
+        }
+
+        private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }
