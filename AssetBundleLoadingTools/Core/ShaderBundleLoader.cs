@@ -39,8 +39,7 @@ namespace AssetBundleLoadingTools.Core
 
             foreach (var file in Directory.EnumerateFiles(Constants.ShaderBundlePath, fileExtensionFilter))
             {
-                var manifest = ManifestFromZipFile(file);
-                var bundleStream = AssetBundleStreamFromZipFile(file);
+                (var manifest, var bundleStream) = GetEntriesFromZipFile(file);
                 if (manifest == null || bundleStream == null) continue;
 
                 var bundle = AssetBundle.LoadFromStream(bundleStream); // Needs main thread
@@ -89,11 +88,10 @@ namespace AssetBundleLoadingTools.Core
 
             foreach (var file in webBundles)
             {
-                var manifest = ManifestFromZipFile(file);
-                var bundleStream = AssetBundleStreamFromZipFile(file);
+                (var manifest, var bundleStream) = GetEntriesFromZipFile(file);
                 if (manifest == null || bundleStream == null) continue;
 
-                var bundle = await LoadAssetBundleFromStreamAsync(bundleStream); // Needs main thread
+                var bundle = await AssetBundleExtensions.LoadFromStreamAsync(bundleStream); // Needs main thread
                 if (bundle == null) continue;
 
                 manifest.Path = file;
@@ -239,47 +237,31 @@ namespace AssetBundleLoadingTools.Core
             }
         }
 
-        private ShaderBundleManifest? ManifestFromZipFile(string path)
+        private (ShaderBundleManifest? ShaderBundleManifest, Stream? Stream) GetEntriesFromZipFile(string path)
         {
             using ZipArchive archive = ZipFile.OpenRead(path);
 
             var jsonEntry = archive.Entries.FirstOrDefault(i => i.Name == Constants.ManifestFileName);
             var bundleEntry = archive.Entries.FirstOrDefault(i => i.Name == Constants.BundleFileName);
-            if (jsonEntry == null || bundleEntry == null) return null;
+            if (jsonEntry == null || bundleEntry == null)
+            {
+                return (null, null);
+            }
 
             using var manifestStream = new StreamReader(jsonEntry.Open(), Encoding.Default);
             string manifestString = manifestStream.ReadToEnd();
             ShaderBundleManifest? manifest = JsonConvert.DeserializeObject<ShaderBundleManifest>(manifestString);
 
-            return manifest;
-        }
-
-        private MemoryStream? AssetBundleStreamFromZipFile(string path)
-        {
-            using ZipArchive archive = ZipFile.OpenRead(path);
-
-            var jsonEntry = archive.Entries.FirstOrDefault(i => i.Name == Constants.ManifestFileName);
-            var bundleEntry = archive.Entries.FirstOrDefault(i => i.Name == Constants.BundleFileName);
-            if (jsonEntry == null || bundleEntry == null) return null;
+            if (manifest == null)
+            {
+                return (null, null);
+            }
 
             var seekableStream = new MemoryStream();
             bundleEntry.Open().CopyTo(seekableStream);
             seekableStream.Position = 0;
             
-            return seekableStream;
-        }
-
-        private async Task<AssetBundle?> LoadAssetBundleFromStreamAsync(Stream stream)
-        {
-            var completion = new TaskCompletionSource<AssetBundle?>();
-            var assetLoadRequest = AssetBundle.LoadFromStreamAsync(stream);
-
-            assetLoadRequest.completed += delegate
-            {
-                completion.SetResult(assetLoadRequest.assetBundle);
-            };
-
-            return await completion.Task;
+            return (manifest, seekableStream);
         }
 
         private async Task<Shader?> LoadShaderFromPathAsync(AssetBundle bundle, string assetName)
