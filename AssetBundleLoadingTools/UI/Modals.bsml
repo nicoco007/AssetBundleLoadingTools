@@ -1,10 +1,10 @@
-﻿<bg xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd">
+﻿<bg xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://monkeymanboy.github.io/BSML-Docs/ https://monkeymanboy.github.io/BSML-Docs/BSMLSchema.xsd">
 	<modal id="multi-pass-modal" click-off-closes="false" size-delta-x="115">
 		<vertical horizontal-fit="Unconstrained" vertical-fit="PreferredSize" size-delta-x="0" size-delta-y="0" child-expand-height="false" pad="5" pad-bottom="8" spacing="5">
 			<text
-				rich-text="true"
+				line-spacing="-20"
 				overflow="Masking"
-				paragraph-spacing="40"
+				paragraph-spacing="60"
 				word-wrapping="true"
 				italics="true"
 				text="A model couldn't be fully loaded on this version of Beat Saber.&lt;br&gt;Multi-pass rendering can improve model compatibility at the cost of performance.&lt;br&gt;Would you like to enable multi-pass rendering? You can turn it back off in Settings&#160;&#8594; Mod Settings&#160;&#8594; Asset Bundles."/>
