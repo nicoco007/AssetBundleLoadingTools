@@ -1,12 +1,13 @@
 ﻿<bg xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd">
-	<modal id="multi-pass-modal" click-off-closes="false" size-delta-x="120">
+	<modal id="multi-pass-modal" click-off-closes="false" size-delta-x="115">
 		<vertical horizontal-fit="Unconstrained" vertical-fit="PreferredSize" size-delta-x="0" size-delta-y="0" child-expand-height="false" pad="5" pad-bottom="8" spacing="5">
 			<text
 				rich-text="true"
 				overflow="Masking"
 				paragraph-spacing="40"
 				word-wrapping="true"
-				text="A model couldn't be fully loaded on this version of Beat Saber.&lt;br&gt;Multi-pass rendering can improve model compatibility at the cost of performance.&lt;br&gt;Would you like to enable multi-pass rendering? You can turn it back off in &lt;i&gt;Settings&lt;/i&gt; &#8594; &lt;i&gt;Mod Settings&lt;/i&gt; &#8594; &lt;i&gt;Asset Bundles&lt;/i&gt;."/>
+				italics="true"
+				text="A model couldn't be fully loaded on this version of Beat Saber.&lt;br&gt;Multi-pass rendering can improve model compatibility at the cost of performance.&lt;br&gt;Would you like to enable multi-pass rendering? You can turn it back off in Settings&#160;&#8594; Mod Settings&#160;&#8594; Asset Bundles."/>
 			<bg horizontal-fit="Unconstrained" vertical-fit="PreferredSize" anchor-min-x="0" anchor-min-y="0" anchor-max-x="1" anchor-max-y="1" size-delta-x="0" size-delta-y="0">
 				<button text="Yes" interactable="~Interactable" horizontal-fit="Unconstrained" anchor-min-x="0" anchor-max-x="0.32" size-delta-x="0" anchor-pos-x="0" anchor-pos-y="0" on-click="YesButtonClicked" />
 				<button text="~NoButtonText" interactable="~Interactable" horizontal-fit="Unconstrained" anchor-min-x="0.34" anchor-max-x="0.66" size-delta-x="0" anchor-pos-x="0" anchor-pos-y="0" on-click="NoButtonClicked" />
