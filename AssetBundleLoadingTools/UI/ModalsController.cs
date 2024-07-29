@@ -201,7 +201,7 @@ namespace AssetBundleLoadingTools.UI
             modalView._animateParentCanvas = true; // this gets set to false improperly sometimes
             modalView.SetupView(screenTransform); // force use of the screen instead of the child view controller
             modalView.Show(true, true);
-            modalView._previousParent = screenTransform; // make sure the modal won't be parented to some random view controller when hidden
+            modalView._previousParent = transform; // make sure the modal won't be parented to some random view controller when hidden
 
             // this kinda sucks but there's no straightforward way to have the ModalView ignore the view controller
             ViewController viewController = screen.GetComponentInChildren<ViewController>();
