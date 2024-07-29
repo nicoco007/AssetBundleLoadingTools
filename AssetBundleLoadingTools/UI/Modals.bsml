@@ -3,7 +3,6 @@
 		<vertical horizontal-fit="Unconstrained" vertical-fit="PreferredSize" size-delta-x="0" size-delta-y="0" child-expand-height="false" pad="5" pad-bottom="8" spacing="5">
 			<text
 				line-spacing="-20"
-				overflow="Masking"
 				paragraph-spacing="60"
 				word-wrapping="true"
 				italics="true"
