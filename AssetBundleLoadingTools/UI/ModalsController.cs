@@ -18,6 +18,8 @@ namespace AssetBundleLoadingTools.UI
     {
         private struct VoidResult { }
 
+        private const int MultiPassModalDelaySeconds = 10;
+
         private static TaskCompletionSource<VoidResult> instanceAvailableTaskCompletionSource = new();
 
         private readonly Dictionary<Screen, ModalView> dummyModals = new();
@@ -127,7 +129,7 @@ namespace AssetBundleLoadingTools.UI
 
             ConfigureAndShowModal(mainScreenModal, mainScreen);
 
-            targetTime = UnityEngine.Time.unscaledTime + 10;
+            targetTime = UnityEngine.Time.unscaledTime + MultiPassModalDelaySeconds;
 
             NotifyPropertyChanged(nameof(NoButtonText));
             NotifyPropertyChanged(nameof(Interactable));
