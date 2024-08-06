@@ -101,7 +101,7 @@ namespace AssetBundleLoadingTools.Utilities
             IntPtr intShaderPtr = *(IntPtr*)(shaderPtr + 56);
             Log($"intShaderPtr: {intShaderPtr.ToString("x")}");
             IntPtr* subShaderListPtr = *(IntPtr**)intShaderPtr;
-            Log($"subShaderListPtr: {(IntPtr)subShaderListPtr:x}");
+            Log($"subShaderListPtr: {((IntPtr)subShaderListPtr).ToString("x")}");
             int numSubShaders = *(int*)(intShaderPtr + 16);
             Log("Subshaders: " + numSubShaders);
 
@@ -162,7 +162,7 @@ namespace AssetBundleLoadingTools.Utilities
 
                         if (dxbc != 0x44)
                         {
-                            Log($"No DXBC header for {dataptr.ToString("x")} (type {shaderType:x})");
+                            Log($"No DXBC header for {dataptr.ToString("x")} (type {shaderType})");
                         }
 
                         Log($"Bytecode: {dxbcAddr.ToString("x")}");
