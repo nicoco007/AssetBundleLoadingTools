@@ -8,12 +8,15 @@ using Shader = UnityEngine.Shader;
 namespace AssetBundleLoadingTools.Utilities
 {
     /// <summary>
-    /// Class for reading shader data and checking of SPI support
-    /// taken from https://github.com/ToniMacaroni/UnsafeShaderTools
+    /// Class for reading shader data and checking of SPI support.
+    /// Adapted from <see href="https://github.com/ToniMacaroni/UnsafeShaderTools">UnsafeShaderTools</see>.
     /// </summary>
+    /// <remarks>
+    /// The pointer offsets may change from one Unity version to the next. This was tested against Unity 2022.3.33f1.
+    /// </remarks>
     internal static class ShaderReader
     {
-        private const string TexArrayKeyword = "SV_RenderTargetArrayIndex";
+        private const string TexArrayKeyword = "SV_InstanceID";
 
         private static readonly Logger logger = Plugin.Log.GetChildLogger(nameof(ShaderReader));
 
@@ -110,21 +113,15 @@ namespace AssetBundleLoadingTools.Utilities
                 IntPtr subShaderPtr = subShaderListPtr[subShaderIdx];
                 Log($"Parsing subshader ptr {subShaderPtr.ToString("x")}");
             
-                if (*(int*)subShaderPtr != 0 || *(byte*)(subShaderPtr+4) != 0xff)
-                {
-                    Log("SubShader check failed");
-                    return result;
-                }
-
-                IntPtr* passListPtr = *(IntPtr**)(subShaderPtr + 112);
-                int numPasses = *(int*)(subShaderPtr + 128);
+                IntPtr* passListPtr = *(IntPtr**)(subShaderPtr + 0x78);
+                int numPasses = *(int*)(subShaderPtr + 0x88);
                 Log("Passes: " + numPasses);
 
                 for (int passIdx = 0; passIdx < numPasses; passIdx++)
                 {
                     IntPtr passPtr = passListPtr[passIdx * 2]; // *2 because of the list structure (each entry is 2 pointers wide)
                     Log($"Parsing pass ptr {passPtr.ToString("x")}");
-                    IntPtr progPtr = *(IntPtr*)(passPtr+120);
+                    IntPtr progPtr = *(IntPtr*)(passPtr + 0x170);
                     if (progPtr == IntPtr.Zero)
                     {
                         Log("No program in this pass");
