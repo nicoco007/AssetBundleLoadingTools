@@ -17,28 +17,6 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
     
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-  </PropertyGroup>
-    
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-    
-  <PropertyGroup Condition="$(DefineConstants.Contains('CIBuild')) OR '$(NCrunch)' == '1'">
-    <DisableCopyToPlugins>True</DisableCopyToPlugins>
-  </PropertyGroup>
-    
-  <PropertyGroup Condition="'$(NCrunch)' == '1'">
-    <DisableCopyToPlugins>True</DisableCopyToPlugins>
-    <DisableZipRelease>True</DisableZipRelease>
-  </PropertyGroup>
-    
   <ItemGroup>
     <Reference Include="0Harmony">
       <HintPath>$(GameDirectory)\Libs\0Harmony.dll</HintPath>
@@ -66,10 +44,6 @@
       <Private>False</Private>
       <Publicize>True</Publicize>
     </Reference>
-    <Reference Include="IPA.Loader">
-      <HintPath>$(GameDirectory)\Beat Saber_Data\Managed\IPA.Loader.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>$(GameDirectory)\Beat Saber_Data\Managed\Newtonsoft.Json.dll</HintPath>
       <Private>False</Private>
@@ -86,6 +60,18 @@
     <Reference Include="SiraUtil">
       <HintPath>$(GameDirectory)\Plugins\SiraUtil.dll</HintPath>
       <Private>False</Private>
+    </Reference>
+    <Reference Include="System.IO.Compression">
+      <HintPath>$(GameDirectory)\Beat Saber_Data\Managed\System.IO.Compression.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="System.IO.Compression.FileSystem">
+      <HintPath>$(GameDirectory)\Beat Saber_Data\Managed\System.IO.Compression.FileSystem.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="System.Net.Http">
+      <HintPath>$(GameDirectory)\Beat Saber_Data\Managed\System.Net.Http.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="Unity.TextMeshPro">
       <HintPath>$(GameDirectory)\Beat Saber_Data\Managed\Unity.TextMeshPro.dll</HintPath>
@@ -140,7 +126,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="manifest.json" />
     <EmbeddedResource Include="UI\*.bsml" />
   </ItemGroup>
     
@@ -148,13 +133,13 @@
     <None Include="AssetBundleLoadingTools.csproj.user" />
   </ItemGroup>
 
-  <Target Name="CopyShaderBundles" AfterTargets="CopyToArtifactDestination">
+  <Target Name="CopyShaderBundles" AfterTargets="CopyToArtifact">
     <ItemGroup>
       <ShaderBundleFiles Include="$(ProjectDir)..\ShaderBundles\*.shaderbundle" />
     </ItemGroup>
 
     <PropertyGroup>
-      <ArtifactShaderBundlesDir>$(ArtifactDestination)\UserData\AssetBundleLoadingTools\ShaderBundles</ArtifactShaderBundlesDir>
+      <ArtifactShaderBundlesDir>$(ArtifactDir)\UserData\AssetBundleLoadingTools\ShaderBundles</ArtifactShaderBundlesDir>
       <GameShaderBundlesDir>$(GameDirectory)\UserData\AssetBundleLoadingTools\ShaderBundles</GameShaderBundlesDir>
     </PropertyGroup>
   
@@ -162,17 +147,7 @@
     <Copy SourceFiles="@(ShaderBundleFiles)" DestinationFolder="$(GameShaderBundlesDir)\%(ShaderBundleFiles.RecursiveDir)" Condition="'$(DisableCopyToGame)' != 'True' AND '$(ContinuousIntegrationBuild)' != 'True'" />
   </Target>
 
-  <Target Name="CopyDocumentationFile" AfterTargets="CopyToArtifactDestination">
-    <Copy SourceFiles="$(TargetDir)$(TargetName).xml" DestinationFolder="$(ArtifactDestination)\Plugins" />
-    <Copy SourceFiles="$(TargetDir)$(TargetName).xml" DestinationFolder="$(GameDirectory)\Plugins" />
-  </Target>
-
   <ItemGroup>
-    <PackageReference Include="BeatSaberModdingTools.Tasks">
-      <Version>2.0.0-beta6</Version>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
     <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

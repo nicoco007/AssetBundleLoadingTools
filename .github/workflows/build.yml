@@ -28,5 +28,5 @@ jobs:
     - name: Upload Release
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ steps.build-release.outputs.filename }}
-        path: ${{ steps.build-release.outputs.artifactpath }}
+        name: ${{ steps.build-release.outputs.artifact-name }}
+        path: ${{ steps.build-release.outputs.artifact-path }}

@@ -1,6 +1,6 @@
 root = true
 
-[*.{csproj,csproj.user,props,targets}]
+[*.{config,csproj,csproj.user,props,targets}]
 indent_style = space
 indent_size = 2
 end_of_line = crlf
