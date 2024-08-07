@@ -16,10 +16,10 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Set up Beat Saber
-      uses: nicoco007/setup-beat-saber@main
+      uses: nicoco007/setup-beat-saber@v1
       with:
-        access-token: ${{ secrets.PRIVATE_GITHUB_TOKEN }}
-        manifest: ${{ github.workspace }}\AssetBundleLoadingTools\manifest.json
+        access-token: ${{ secrets.BEAT_SABER_REFERENCE_ASSEMBLIES_TOKEN }}
+        project-path: ${{ github.workspace }}\AssetBundleLoadingTools\AssetBundleLoadingTools.csproj
 
     - name: Build Release
       id: build-release
@@ -28,5 +28,5 @@ jobs:
     - name: Upload Release
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ steps.build-release.outputs.filename }}
-        path: ${{ steps.build-release.outputs.artifactpath }}
+        name: ${{ steps.build-release.outputs.artifact-name }}
+        path: ${{ steps.build-release.outputs.artifact-path }}

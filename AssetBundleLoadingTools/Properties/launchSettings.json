@@ -2,18 +2,18 @@
   "profiles": {
     "Beat Saber": {
       "commandName": "Executable",
-      "executablePath": "$(GameDirectory)\\Beat Saber.exe",
+      "executablePath": "$(BeatSaberDir)Beat Saber.exe",
       "commandLineArgs": "--verbose --debug",
-      "workingDirectory": "$(GameDirectory)",
+      "workingDirectory": "$(BeatSaberDir)",
       "environmentVariables": {
         "SteamAppId": "620980"
       }
     },
     "Beat Saber (FPFC)": {
       "commandName": "Executable",
-      "executablePath": "$(GameDirectory)\\Beat Saber.exe",
+      "executablePath": "$(BeatSaberDir)Beat Saber.exe",
       "commandLineArgs": "fpfc --verbose --debug",
-      "workingDirectory": "$(GameDirectory)",
+      "workingDirectory": "$(BeatSaberDir)",
       "environmentVariables": {
         "SteamAppId": "620980"
       }
