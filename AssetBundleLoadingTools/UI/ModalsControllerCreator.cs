@@ -10,11 +10,13 @@ namespace AssetBundleLoadingTools.UI
     internal class ModalsControllerCreator : IInitializable
     {
         private readonly DiContainer container;
+        private readonly BSMLParser bsmlParser;
         private readonly HierarchyManager hierarchyManager;
 
-        protected ModalsControllerCreator(DiContainer container, HierarchyManager hierarchyManager)
+        protected ModalsControllerCreator(DiContainer container, BSMLParser bsmlParser, HierarchyManager hierarchyManager)
         {
             this.container = container;
+            this.bsmlParser = bsmlParser;
             this.hierarchyManager = hierarchyManager;
         }
 
@@ -29,7 +31,7 @@ namespace AssetBundleLoadingTools.UI
             using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("AssetBundleLoadingTools.UI.Modals.bsml"))
             using (var streamReader = new StreamReader(stream))
             {
-                BSMLParser.instance.Parse(streamReader.ReadToEnd(), gameObject, modalsController);
+                bsmlParser.Parse(streamReader.ReadToEnd(), gameObject, modalsController);
             }
 
             gameObject.SetActive(true);

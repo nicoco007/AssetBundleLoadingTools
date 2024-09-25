@@ -29,8 +29,6 @@ namespace AssetBundleLoadingTools
         internal static PluginConfig Config { get; private set; } = null!;
         private static Timer? _debuggerWriteTimer { get; set; }
 
-        private SettingsHost? settingsHost;
-
         [Init]
         public void Init(IPALogger logger, IPA.Config.Config config, Zenjector zenjector)
         {
@@ -59,9 +57,6 @@ namespace AssetBundleLoadingTools
         public void OnApplicationStart()
         {
             harmony.PatchAll();
-
-            settingsHost = new SettingsHost();
-            BSMLSettings.instance.AddSettingsMenu("Asset Bundles", "AssetBundleLoadingTools.UI.Settings.bsml", settingsHost);
         }
 
         [OnExit]
@@ -69,9 +64,6 @@ namespace AssetBundleLoadingTools
         {
             _debuggerWriteTimer?.Dispose();
             harmony.UnpatchSelf();
-
-            BSMLSettings.instance.RemoveSettingsMenu(settingsHost);
-            settingsHost = null;
         }
     }
 }
