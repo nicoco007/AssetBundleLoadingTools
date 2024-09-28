@@ -210,6 +210,9 @@ namespace AssetBundleLoadingTools.UI
             {
                 viewController.didDeactivateEvent -= modalView.HandleParentViewControllerDidDeactivate;
             }
+
+            // force parent back to screen rather than child view controller
+            modalView.transform.SetParent(screenTransform, false);
         }
 
         private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
