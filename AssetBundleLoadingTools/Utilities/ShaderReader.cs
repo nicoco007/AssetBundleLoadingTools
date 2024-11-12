@@ -98,38 +98,44 @@ namespace AssetBundleLoadingTools.Utilities
         public static unsafe List<IntPtr> ReadShaderDataUnsafe(IntPtr shaderPtr)
         {
             var result = new List<IntPtr>();
-            
+            bool isDebugBuild = UnityEngine.Debug.isDebugBuild;
+
             Log($"Parsing shader ptr {shaderPtr.ToString("x")}");
-            
-            IntPtr intShaderPtr = *(IntPtr*)(shaderPtr + 56);
+            Log($"isDebugBuild: " + isDebugBuild);
+
+            IntPtr intShaderPtr = *(IntPtr*)(shaderPtr + (isDebugBuild ? 10 : 7) * 8);
             Log($"intShaderPtr: {intShaderPtr.ToString("x")}");
             IntPtr* subShaderListPtr = *(IntPtr**)intShaderPtr;
             Log($"subShaderListPtr: {((IntPtr)subShaderListPtr).ToString("x")}");
-            int numSubShaders = *(int*)(intShaderPtr + 16);
+            int numSubShaders = *(int*)(intShaderPtr + (isDebugBuild ? 24 : 16));
             Log("Subshaders: " + numSubShaders);
 
             for (int subShaderIdx = 0; subShaderIdx < numSubShaders; subShaderIdx++)
             {
                 IntPtr subShaderPtr = subShaderListPtr[subShaderIdx];
                 Log($"Parsing subshader ptr {subShaderPtr.ToString("x")}");
-            
-                IntPtr* passListPtr = *(IntPtr**)(subShaderPtr + 0x78);
-                int numPasses = *(int*)(subShaderPtr + 0x88);
+
+                IntPtr intListPtr = subShaderPtr + 120;
+                Log($"intListPtr: {intListPtr.ToString("x")}");
+                IntPtr* passListPtr = *(IntPtr**)intListPtr;
+                Log($"passListPtr: {((IntPtr)passListPtr).ToString("x")}");
+                int numPasses = *(int*)(intListPtr + (isDebugBuild ? 24 : 16));
                 Log("Passes: " + numPasses);
 
                 for (int passIdx = 0; passIdx < numPasses; passIdx++)
                 {
                     IntPtr passPtr = passListPtr[passIdx * 2]; // *2 because of the list structure (each entry is 2 pointers wide)
                     Log($"Parsing pass ptr {passPtr.ToString("x")}");
-                    IntPtr progPtr = *(IntPtr*)(passPtr + 0x170);
+                    IntPtr progPtr = *(IntPtr*)(passPtr + (isDebugBuild ? 55 : 46) * 8);
                     if (progPtr == IntPtr.Zero)
                     {
                         Log("No program in this pass");
                         continue;
                     }
                     
-                    IntPtr* subProgListPtr = *(IntPtr**)(progPtr + 8);
-                    int numSubProgs = *(int*)(progPtr + 24);
+                    IntPtr* subProgListPtr = *(IntPtr**)(progPtr + (isDebugBuild ? 16 : 8));
+                    Log($"subProgListPtr: {((IntPtr)subProgListPtr).ToString("x")}");
+                    int numSubProgs = *(int*)(progPtr + (isDebugBuild ? 5 : 3) * 8);
                     Log("Subprogs: " + numSubProgs);
 
                     for (int subProgIdx = 0; subProgIdx < numSubProgs; subProgIdx++)
