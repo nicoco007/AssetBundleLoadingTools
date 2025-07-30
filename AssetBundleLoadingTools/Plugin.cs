@@ -1,8 +1,6 @@
 ﻿using AssetBundleLoadingTools.Config;
 using AssetBundleLoadingTools.Core;
 using AssetBundleLoadingTools.Installers;
-using AssetBundleLoadingTools.UI;
-using BeatSaberMarkupLanguage.Settings;
 using HarmonyLib;
 using IPA;
 using IPA.Config.Stores;

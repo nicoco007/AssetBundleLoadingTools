@@ -9,7 +9,7 @@
     <Title>AssetBundleLoadingTools</Title>
     <Authors>Bobbie, nicoco007</Authors>
     <Description>A library with various tools to help safely load AssetBundles and fix legacy shader issues.</Description>
-    <GameVersion>1.37.4</GameVersion>
+    <GameVersion>1.40.9</GameVersion>
     <Version>1.1.10</Version>
     <RepositoryUrl>https://github.com/nicoco007/AssetBundleLoadingTools</RepositoryUrl>
   </PropertyGroup>
