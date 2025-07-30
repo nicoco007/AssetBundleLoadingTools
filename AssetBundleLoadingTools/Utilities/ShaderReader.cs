@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using TMPro;
 using Shader = UnityEngine.Shader;
 
 namespace AssetBundleLoadingTools.Utilities
@@ -103,7 +104,7 @@ namespace AssetBundleLoadingTools.Utilities
             Log($"Parsing shader ptr {shaderPtr.ToString("x")}");
             Log($"isDebugBuild: " + isDebugBuild);
 
-            IntPtr intShaderPtr = *(IntPtr*)(shaderPtr + (isDebugBuild ? 10 : 7) * 8);
+            IntPtr intShaderPtr = *(IntPtr*)(shaderPtr + (isDebugBuild ? 8 : 5) * 8);
             Log($"intShaderPtr: {intShaderPtr.ToString("x")}");
             IntPtr* subShaderListPtr = *(IntPtr**)intShaderPtr;
             Log($"subShaderListPtr: {((IntPtr)subShaderListPtr).ToString("x")}");
@@ -115,7 +116,7 @@ namespace AssetBundleLoadingTools.Utilities
                 IntPtr subShaderPtr = subShaderListPtr[subShaderIdx];
                 Log($"Parsing subshader ptr {subShaderPtr.ToString("x")}");
 
-                IntPtr intListPtr = subShaderPtr + 120;
+                IntPtr intListPtr = subShaderPtr + 128;
                 Log($"intListPtr: {intListPtr.ToString("x")}");
                 IntPtr* passListPtr = *(IntPtr**)intListPtr;
                 Log($"passListPtr: {((IntPtr)passListPtr).ToString("x")}");
