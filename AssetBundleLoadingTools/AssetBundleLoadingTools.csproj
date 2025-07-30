@@ -1,5 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <LangVersion>12</LangVersion>
     <Nullable>enable</Nullable>
     <Copyright>Copyright © Bobbie, nicoco007 2023-2024</Copyright>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
@@ -21,104 +23,30 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="0Harmony">
-      <HintPath>$(BeatSaberDir)Libs\0Harmony.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="BSML">
-      <HintPath>$(BeatSaberDir)Plugins\BSML.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="BeatSaber.ViewSystem">
-      <HintPath>$(BeatSaberDir)Beat Saber_Data\Managed\BeatSaber.ViewSystem.dll</HintPath>
-      <Private>False</Private>
-      <Publicize>True</Publicize>
-    </Reference>
-    <Reference Include="BGLib.UnityExtension">
-      <HintPath>$(BeatSaberDir)Beat Saber_Data\Managed\BGLib.UnityExtension.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="HMLib">
-      <HintPath>$(BeatSaberDir)Beat Saber_Data\Managed\HMLib.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="HMRendering">
-      <HintPath>$(BeatSaberDir)Beat Saber_Data\Managed\HMRendering.dll</HintPath>
-      <Private>False</Private>
-      <Publicize>True</Publicize>
-    </Reference>
-    <Reference Include="HMUI">
-      <HintPath>$(BeatSaberDir)Beat Saber_Data\Managed\HMUI.dll</HintPath>
-      <Private>False</Private>
-      <Publicize>True</Publicize>
-    </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>$(BeatSaberDir)Beat Saber_Data\Managed\Newtonsoft.Json.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Main">
-      <HintPath>$(BeatSaberDir)Beat Saber_Data\Managed\Main.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Rendering">
-      <HintPath>$(BeatSaberDir)Beat Saber_Data\Managed\Rendering.dll</HintPath>
-      <Private>False</Private>
-      <Publicize>True</Publicize>
-    </Reference>
-    <Reference Include="SiraUtil">
-      <HintPath>$(BeatSaberDir)Plugins\SiraUtil.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Unity.TextMeshPro">
-      <HintPath>$(BeatSaberDir)Beat Saber_Data\Managed\Unity.TextMeshPro.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Unity.XR.Management">
-      <HintPath>$(BeatSaberDir)Beat Saber_Data\Managed\Unity.XR.Management.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Unity.XR.OpenXR">
-      <HintPath>$(BeatSaberDir)Beat Saber_Data\Managed\Unity.XR.OpenXR.dll</HintPath>
-      <Private>False</Private>
-      <Publicize>True</Publicize>
-    </Reference>
-    <Reference Include="UnityEngine">
-      <HintPath>$(BeatSaberDir)Beat Saber_Data\Managed\UnityEngine.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="UnityEngine.AssetBundleModule">
-      <HintPath>$(BeatSaberDir)Beat Saber_Data\Managed\UnityEngine.AssetBundleModule.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="UnityEngine.CoreModule">
-      <HintPath>$(BeatSaberDir)Beat Saber_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
-      <Private>False</Private>
-      <Publicize>True</Publicize>
-    </Reference>
-    <Reference Include="UnityEngine.UI">
-      <HintPath>$(BeatSaberDir)Beat Saber_Data\Managed\UnityEngine.UI.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="UnityEngine.UIElementsModule">
-      <HintPath>$(BeatSaberDir)Beat Saber_Data\Managed\UnityEngine.UIElementsModule.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="UnityEngine.UIModule">
-      <HintPath>$(BeatSaberDir)Beat Saber_Data\Managed\UnityEngine.UIModule.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="UnityEngine.VRModule">
-      <HintPath>$(BeatSaberDir)Beat Saber_Data\Managed\UnityEngine.VRModule.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Zenject">
-      <HintPath>$(BeatSaberDir)Beat Saber_Data\Managed\Zenject.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Zenject-usage">
-      <HintPath>$(BeatSaberDir)Beat Saber_Data\Managed\Zenject-usage.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
+    <Reference Include="0Harmony" />
+    <Reference Include="BSML" />
+    <Reference Include="BeatSaber.ViewSystem" Publicize="True" />
+    <Reference Include="BGLib.UnityExtension" />
+    <Reference Include="IPA.Loader" />
+    <Reference Include="HMLib" />
+    <Reference Include="HMRendering" Publicize="True" />
+    <Reference Include="HMUI" Publicize="True" />
+    <Reference Include="Newtonsoft.Json" />
+    <Reference Include="Main" />
+    <Reference Include="Rendering" Publicize="True" />
+    <Reference Include="SiraUtil" />
+    <Reference Include="Unity.TextMeshPro" />
+    <Reference Include="Unity.XR.Management" />
+    <Reference Include="Unity.XR.OpenXR" Publicize="True" />
+    <Reference Include="UnityEngine" />
+    <Reference Include="UnityEngine.AssetBundleModule" />
+    <Reference Include="UnityEngine.CoreModule" Publicize="True" />
+    <Reference Include="UnityEngine.UI" />
+    <Reference Include="UnityEngine.UIElementsModule" />
+    <Reference Include="UnityEngine.UIModule" />
+    <Reference Include="UnityEngine.VRModule" />
+    <Reference Include="Zenject" />
+    <Reference Include="Zenject-usage" />
   </ItemGroup>
 
   <ItemGroup>
@@ -126,11 +54,23 @@
   </ItemGroup>
     
   <ItemGroup>
-    <AdditionalArtifactFiles Include="$(ProjectDir)..\ShaderBundles\*.shaderbundle" TargetDir="UserData\AssetBundleLoadingTools\ShaderBundles" />
+    <ArtifactFiles Include="$(ProjectDir)..\ShaderBundles\*.shaderbundle" DestinationFolder="UserData\AssetBundleLoadingTools\ShaderBundles" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.2">
+    <PackageReference Include="BSIPA.AssemblyPublicizer.MSBuild" Version="0.5.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="nicoco007.BeatSaberModdingTools.Tasks" Version="0.1.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeStyle" Version="4.10.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Unity.Analyzers" Version="1.22.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
