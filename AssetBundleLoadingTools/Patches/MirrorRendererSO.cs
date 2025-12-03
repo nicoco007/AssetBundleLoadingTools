@@ -33,9 +33,9 @@ namespace AssetBundleLoadingTools.Patches
                 // make stereoEnabled take into account multi pass
                 // stereoEnabled = current.stereoEnabled && XRSettings.stereoRenderingMode != StereoRenderingMode.MultiPass
                 .MatchForward(true,
-                    new CodeMatch(OpCodes.Ldloc_0),
+                    new CodeMatch(OpCodes.Ldarg_1), // Camera currentCamera
                     new CodeMatch(i => i.Calls(CameraGetStereoEnabled)),
-                    new CodeMatch(i => i.SetsLocal(4))) // bool stereoEnabled
+                    new CodeMatch(OpCodes.Stloc_3)) // bool stereoEnabled
                 .ThrowIfInvalid("Set stereoEnabled not found")
                 .Insert(new CodeInstruction(OpCodes.Ldc_I4_0))
                 .CreateLabel(out Label setStereoEnabledFalse)
@@ -49,27 +49,27 @@ namespace AssetBundleLoadingTools.Patches
                     new CodeInstruction(OpCodes.Ceq),
                     new CodeInstruction(OpCodes.Ldc_I4_0), // compare again so we get (XRSettings.stereoRenderingMode == StereoRenderingMode.MultiPass) == false => XRSettings.stereoRenderingMode != StereoRenderingMode.MultiPass
                     new CodeInstruction(OpCodes.Ceq),
-                    new CodeInstruction(OpCodes.Stloc, 4),
+                    new CodeInstruction(OpCodes.Stloc, 3),
                     new CodeInstruction(OpCodes.Br, afterSetStereoEnabled)) // skip the part that sets stereoEnabled to false
 
                 // change the render texture existence check so it only returns if the stereoActiveEye was already rendered
                 .MatchForward(false,
                     new CodeMatch(OpCodes.Ldarg_0),
-                    new CodeMatch(OpCodes.Ldloc_0),
-                    new CodeMatch(i => i.LoadsLocal(7)), // RenderTexture value
+                    new CodeMatch(OpCodes.Ldarg_1),
+                    new CodeMatch(i => i.LoadsLocal(6)), // RenderTexture value
                     new CodeMatch(i => i.Calls(CreateOrUpdateMirrorCamera))) // right after the render textures dictionary is updated
                 .ThrowIfInvalid("CreateOrUpdateMirrorCamera not found")
                 .CreateLabel(out Label afterCreateRenderTextureLabel)
                 .MatchBack(false,
                     new CodeMatch(i => i.Branches(out Label? _)),
-                    new CodeMatch(i => i.LoadsLocal(7)), // RenderTexture value
+                    new CodeMatch(i => i.LoadsLocal(6)), // RenderTexture value
                     new CodeMatch(OpCodes.Ret))
                 .ThrowIfInvalid("Early return not found")
                 .Advance(1)
                 .Insert(
                     new CodeInstruction(OpCodes.Ldarg_0), // this
-                    new CodeInstruction(OpCodes.Ldloc_0), // Camera current
-                    new CodeInstruction(OpCodes.Ldloc, 6), // CameraTransformData cameraTransformData
+                    new CodeInstruction(OpCodes.Ldarg_1), // Camera currentCamera
+                    new CodeInstruction(OpCodes.Ldloc, 5), // CameraTransformData cameraTransformData
                     new CodeInstruction(OpCodes.Call, CheckEyeAlreadyRenderedMethod),
                     new CodeInstruction(OpCodes.Brfalse, afterCreateRenderTextureLabel))
 
@@ -81,11 +81,11 @@ namespace AssetBundleLoadingTools.Patches
                 .Advance(2)
                 .Insert(
                     new CodeInstruction(OpCodes.Ldarg_0), // this
-                    new CodeInstruction(OpCodes.Ldloc_0), // Camera current
-                    new CodeInstruction(OpCodes.Ldloc, 6), // CameraTransformData cameraTransformData
+                    new CodeInstruction(OpCodes.Ldarg_1), // Camera currentCamera
+                    new CodeInstruction(OpCodes.Ldloc, 5), // CameraTransformData cameraTransformData
                     new CodeInstruction(OpCodes.Call, AddEyeRenderedMethod))
 
-                // add our branch when XRSettings.stereoRenderingMode is MultiPass inside the current.stereoEnabled if statement
+                // add our branch when XRSettings.stereoRenderingMode is MultiPass inside the currentCamera.stereoEnabled if statement
                 .MatchBack(true,
                     new CodeMatch(i => i.Calls(CameraGetStereoEnabled)), // got back to the beginning of the if statement
                     new CodeMatch(i => i.Branches(out Label? _)))
@@ -98,11 +98,11 @@ namespace AssetBundleLoadingTools.Patches
                     new CodeInstruction(OpCodes.Ceq),
                     new CodeInstruction(OpCodes.Brfalse, ifNotMultiPassLabel),
                     new CodeInstruction(OpCodes.Ldarg_0), // this
-                    new CodeInstruction(OpCodes.Ldloc_0), // Camera current
-                    new CodeInstruction(OpCodes.Ldloc, 8), // float stereoCameraEyeOffset
-                    new CodeInstruction(OpCodes.Ldloc_3), // Quaternion rotation
-                    new CodeInstruction(OpCodes.Ldarg_1), // Vector3 reflectionPlanePos
-                    new CodeInstruction(OpCodes.Ldarg_2), // Vector3 reflectionPlaneNormal
+                    new CodeInstruction(OpCodes.Ldarg_1), // Camera currentCamera
+                    new CodeInstruction(OpCodes.Ldloc, 7), // float stereoCameraEyeOffset
+                    new CodeInstruction(OpCodes.Ldloc_2), // Quaternion rotation
+                    new CodeInstruction(OpCodes.Ldarg_2), // Vector3 reflectionPlanePos
+                    new CodeInstruction(OpCodes.Ldarg_3), // Vector3 reflectionPlaneNormal
                     new CodeInstruction(OpCodes.Call, RenderMultiPassMethod),
                     new CodeInstruction(OpCodes.Br, afterIfStatementLabel))
                 .Instructions();
