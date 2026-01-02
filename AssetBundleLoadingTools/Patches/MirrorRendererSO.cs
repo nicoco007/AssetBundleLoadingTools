@@ -25,6 +25,16 @@ namespace AssetBundleLoadingTools.Patches
         public static IEnumerable<CodeInstruction> RenderMirrorTextureTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
         {
             return new CodeMatcher(instructions, generator)
+                .DeclareLocal(typeof(bool), out LocalBuilder isMultiPassEnabled)
+
+                // store isMultiPassEnabled local variable
+                .Start()
+                .InsertAndAdvance(
+                    new CodeInstruction(OpCodes.Call, XRSettingsGetStereoRenderingMode),
+                    new CodeInstruction(OpCodes.Ldc_I4_0), // XRSettings.StereoRenderingMode.MultiPass
+                    new CodeInstruction(OpCodes.Ceq),
+                    new CodeInstruction(OpCodes.Stloc_S, isMultiPassEnabled))
+
                 // when multi pass is enabled, use the eye position as the camera position (this allows the render texture caching to work properly)
                 .MatchForward(false,
                     new CodeMatch(OpCodes.Ldloc_0),
@@ -32,7 +42,9 @@ namespace AssetBundleLoadingTools.Patches
                     new CodeMatch(OpCodes.Stloc_1))
                 .ThrowIfInvalid("Vector3 position = transform.position not found")
                 .SetAndAdvance(OpCodes.Ldarg_1, null) // Camera currentCamera
-                .InsertAndAdvance(new CodeInstruction(OpCodes.Ldloc_0, null)) // Transform transform
+                .InsertAndAdvance(
+                    new CodeInstruction(OpCodes.Ldloc_0, null), // Transform transform
+                    new CodeInstruction(OpCodes.Ldloc_S, isMultiPassEnabled))
                 .SetAndAdvance(OpCodes.Call, GetCameraPositionMethod)
 
                 // make stereoEnabled take into account multi pass
@@ -43,6 +55,7 @@ namespace AssetBundleLoadingTools.Patches
                     new CodeMatch(OpCodes.Stloc_3)) // bool stereoEnabled
                 .ThrowIfInvalid("Set stereoEnabled not found")
                 .Advance(1)
+                .InsertAndAdvance(new CodeInstruction(OpCodes.Ldloc_S, isMultiPassEnabled))
                 .SetAndAdvance(OpCodes.Call, GetStereoSinglePassEnabledMethod)
 
                 // replace `if (currentCamera.stereoEnabled) { ... }` with `if (stereoEnabled) { ... }` (use the local variable)
@@ -57,12 +70,12 @@ namespace AssetBundleLoadingTools.Patches
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool GetStereoSinglePassEnabled(Camera camera) => camera.stereoEnabled && XRSettings.stereoRenderingMode != XRSettings.StereoRenderingMode.MultiPass;
+        private static bool GetStereoSinglePassEnabled(Camera camera, bool isMultiPassEnabled) => camera.stereoEnabled && !isMultiPassEnabled;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static Vector3 GetCameraPosition(Camera camera, Transform transform)
+        private static Vector3 GetCameraPosition(Camera camera, Transform transform, bool isMultiPassEnabled)
         {
-            if (camera.stereoEnabled && XRSettings.stereoRenderingMode == XRSettings.StereoRenderingMode.MultiPass)
+            if (camera.stereoEnabled && isMultiPassEnabled)
             {
                 return camera.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, 0), camera.stereoActiveEye);
             }
