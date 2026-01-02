@@ -19,7 +19,6 @@ namespace AssetBundleLoadingTools.Patches
         private static readonly MethodInfo TransformGetPosition = AccessTools.DeclaredPropertyGetter(typeof(Transform), nameof(Transform.position));
         private static readonly MethodInfo GetCameraPositionMethod = AccessTools.DeclaredMethod(typeof(MirrorRendererSOMultiPass), nameof(GetCameraPosition));
         private static readonly FieldInfo StereoTextureWidthField = AccessTools.DeclaredField(typeof(MirrorRendererSO), nameof(MirrorRendererSO._stereoTextureWidth));
-        private static readonly MethodInfo GetStereoTextureWidthMethod = AccessTools.DeclaredMethod(typeof(MirrorRendererSOMultiPass), nameof(GetStereoTextureWidth));
 
         [HarmonyPatch(nameof(MirrorRendererSO.RenderMirrorTexture))]
         [HarmonyTranspiler]
@@ -78,12 +77,16 @@ namespace AssetBundleLoadingTools.Patches
                 .SetAndAdvance(OpCodes.Ldloc_S, isStereoSinglePassEnabled)
 
                 // use half the stereo width when in multi pass
-                .MatchForward(false,
+                .MatchForward(true,
                     new CodeMatch(OpCodes.Ldarg_0),
                     new CodeMatch(i => i.LoadsField(StereoTextureWidthField)))
                 .Advance(1)
-                .InsertAndAdvance(new CodeInstruction(OpCodes.Ldloc_S, isMultiPassEnabled))
-                .SetAndAdvance(OpCodes.Call, GetStereoTextureWidthMethod)
+                .CreateLabel(out Label label)
+                .InsertAndAdvance(
+                    new CodeInstruction(OpCodes.Ldloc_S, isMultiPassEnabled),
+                    new CodeInstruction(OpCodes.Brfalse_S, label),
+                    new CodeInstruction(OpCodes.Ldc_I4_2),
+                    new CodeInstruction(OpCodes.Div))
 
                 // replace `if (currentCamera.stereoEnabled) { ... }` with `if (isStereoSinglePassEnabled) { ... }`
                 .MatchForward(false,
@@ -108,8 +111,5 @@ namespace AssetBundleLoadingTools.Patches
                 return transform.position;
             }
         }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int GetStereoTextureWidth(MirrorRendererSO self, bool isMultiPassEnabled) => isMultiPassEnabled ? self._stereoTextureWidth / 2 : self._stereoTextureWidth;
     }
 }
