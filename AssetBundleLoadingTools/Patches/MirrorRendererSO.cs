@@ -27,21 +27,18 @@ namespace AssetBundleLoadingTools.Patches
             return new CodeMatcher(instructions, generator)
                 .DeclareLocal(typeof(bool), out LocalBuilder isMultiPassEnabled)
                 .DeclareLocal(typeof(bool), out LocalBuilder isStereoSinglePassEnabled)
-
-                // store isMultiPassEnabled local variable
-                .Start()
-                .InsertAndAdvance(
-                    new CodeInstruction(OpCodes.Call, XRSettingsGetStereoRenderingMode),
-                    new CodeInstruction(OpCodes.Ldc_I4_0), // XRSettings.StereoRenderingMode.MultiPass
-                    new CodeInstruction(OpCodes.Ceq),
-                    new CodeInstruction(OpCodes.Stloc_S, isMultiPassEnabled))
-
                 .MatchForward(false,
                     new CodeMatch(OpCodes.Ldloc_0),
                     new CodeMatch(i => i.Calls(TransformGetPosition)),
                     new CodeMatch(OpCodes.Stloc_1))
                 .ThrowIfInvalid("Vector3 position = transform.position not found")
                 .InsertAndAdvance(
+                    // store isMultiPassEnabled local variable
+                    new CodeInstruction(OpCodes.Call, XRSettingsGetStereoRenderingMode),
+                    new CodeInstruction(OpCodes.Ldc_I4_0), // XRSettings.StereoRenderingMode.MultiPass
+                    new CodeInstruction(OpCodes.Ceq),
+                    new CodeInstruction(OpCodes.Stloc_S, isMultiPassEnabled),
+
                     // store stereoEnabled
                     new CodeInstruction(OpCodes.Ldarg_1), // Camera currentCamera
                     new CodeInstruction(OpCodes.Call, CameraGetStereoEnabled),
