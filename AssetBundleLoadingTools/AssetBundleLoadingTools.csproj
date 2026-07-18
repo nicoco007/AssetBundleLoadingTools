@@ -9,13 +9,13 @@
     <Title>AssetBundleLoadingTools</Title>
     <Authors>Bobbie, nicoco007</Authors>
     <Description>A library with various tools to help safely load AssetBundles and fix legacy shader issues.</Description>
-    <GameVersion>1.41.1</GameVersion>
+    <GameVersion>1.44.2</GameVersion>
     <Version>1.1.13</Version>
     <RepositoryUrl>https://github.com/nicoco007/AssetBundleLoadingTools</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
-    <DependsOn Include="BSIPA" Version="^4.3.0" />
+    <DependsOn Include="BSIPA" Version="^4.3.7" />
     <DependsOn Include="BeatSaberMarkupLanguage" Version="^1.12.0" />
     <DependsOn Include="SiraUtil" Version="^3.0.0" />
     <DependsOn Include="System.IO.Compression" Version="^4.6.57" />
@@ -35,6 +35,8 @@
     <Reference Include="Main" />
     <Reference Include="Rendering" Publicize="True" />
     <Reference Include="SiraUtil" />
+    <Reference Include="Unity.RenderPipelines.Core.Runtime" />
+    <Reference Include="Unity.RenderPipelines.Universal.Runtime" />
     <Reference Include="Unity.TextMeshPro" />
     <Reference Include="Unity.XR.Management" />
     <Reference Include="Unity.XR.OpenXR" Publicize="True" />

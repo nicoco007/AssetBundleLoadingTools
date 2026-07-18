@@ -1,9 +1,12 @@
 ﻿using HarmonyLib;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.XR;
 
 namespace AssetBundleLoadingTools.Patches
@@ -11,16 +14,60 @@ namespace AssetBundleLoadingTools.Patches
     /// <summary>
     /// This patch makes base game mirrors work properly when the stereo rendering mode is multi-pass.
     /// </summary>
-    [HarmonyPatch(typeof(MirrorRendererSO))]
+    [HarmonyPatch]
     internal class MirrorRendererSOMultiPass
     {
         private static readonly MethodInfo XRSettingsGetStereoRenderingMode = AccessTools.DeclaredPropertyGetter(typeof(XRSettings), nameof(XRSettings.stereoRenderingMode));
         private static readonly MethodInfo CameraGetStereoEnabled = AccessTools.DeclaredPropertyGetter(typeof(Camera), nameof(Camera.stereoEnabled));
+        private static readonly MethodInfo CameraGetProjectionMatrix = AccessTools.DeclaredPropertyGetter(typeof(Camera), nameof(Camera.projectionMatrix));
         private static readonly MethodInfo TransformGetPosition = AccessTools.DeclaredPropertyGetter(typeof(Transform), nameof(Transform.position));
-        private static readonly MethodInfo GetCameraPositionMethod = AccessTools.DeclaredMethod(typeof(MirrorRendererSOMultiPass), nameof(GetCameraPosition));
+        private static readonly MethodInfo GetEyePosition = AccessTools.DeclaredPropertyGetter(typeof(MirrorRendererSOMultiPass), nameof(EyePosition));
+        private static readonly MethodInfo GetProjectionMatrix = AccessTools.DeclaredPropertyGetter(typeof(MirrorRendererSOMultiPass), nameof(ProjectionMatrix));
         private static readonly FieldInfo StereoTextureWidthField = AccessTools.DeclaredField(typeof(MirrorRendererSO), nameof(MirrorRendererSO._stereoTextureWidth));
 
-        [HarmonyPatch(nameof(MirrorRendererSO.RenderMirrorTexture))]
+        private static readonly Stack<(Vector3 eyePosition, Matrix4x4 projectionMatrix)> cameraParameters = [];
+
+        private static Vector3 EyePosition => cameraParameters.Peek().eyePosition;
+
+        private static Matrix4x4 ProjectionMatrix => cameraParameters.Peek().projectionMatrix;
+
+        private static event Action<ScriptableRenderContext, Camera>? RenderSingleCamera;
+
+        [HarmonyPatch(typeof(UniversalRenderPipeline), nameof(UniversalRenderPipeline.RenderSingleCamera), [typeof(ScriptableRenderContext), typeof(UniversalCameraData)])]
+        [HarmonyPrefix]
+        public static void UniversalRenderPipeline_RenderSingleCamera(ScriptableRenderContext context, UniversalCameraData cameraData)
+        {
+            // Contrary to Camera.transform.position & Camera.projectionMatrix, these properly take into account the current XR eye in multi-pass.
+            // Since calls to RenderSingleCamera can be nested (e.g. with the mirror renderer) we use a stack to store values.
+            cameraParameters.Push((Matrix4x4.Inverse(cameraData.GetViewMatrix()).GetPosition(), cameraData.GetProjectionMatrix()));
+
+            // RenderSingleCamera happens a bit after RenderPipelineManager.beginCameraRendering so we use our own event
+            RenderSingleCamera?.Invoke(context, cameraData.camera);
+        }
+
+        [HarmonyPatch(typeof(UniversalRenderPipeline), nameof(UniversalRenderPipeline.RenderSingleCamera), [typeof(ScriptableRenderContext), typeof(UniversalCameraData)])]
+        [HarmonyPostfix]
+        public static void UniversalRenderPipeline_RenderSingleCamera_Post()
+        {
+            cameraParameters.Pop();
+        }
+
+        [HarmonyPatch(typeof(Mirror), nameof(Mirror.OnEnable))]
+        [HarmonyPostfix]
+        public static void OnEnable(Mirror __instance)
+        {
+            RenderPipelineManager.beginCameraRendering -= __instance.OnBeginCameraRendering;
+            RenderSingleCamera += __instance.OnBeginCameraRendering;
+        }
+
+        [HarmonyPatch(typeof(Mirror), nameof(Mirror.OnDisable))]
+        [HarmonyPostfix]
+        public static void OnDisable(Mirror __instance)
+        {
+            RenderSingleCamera -= __instance.OnBeginCameraRendering;
+        }
+
+        [HarmonyPatch(typeof(MirrorRendererSO), nameof(MirrorRendererSO.RenderMirrorTexture))]
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> RenderMirrorTextureTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
         {
@@ -51,13 +98,9 @@ namespace AssetBundleLoadingTools.Patches
                     new CodeInstruction(OpCodes.And),
                     new CodeInstruction(OpCodes.Stloc_S, isStereoSinglePassEnabled))
 
-                // when multi pass is enabled, use the eye position as the camera position (this allows the render texture caching to work properly)
-                .SetAndAdvance(OpCodes.Ldarg_1, null) // Camera currentCamera
-                .InsertAndAdvance(
-                    new CodeInstruction(OpCodes.Ldloc_0), // Transform transform
-                    new CodeInstruction(OpCodes.Ldloc_3), // bool stereoEnabled
-                    new CodeInstruction(OpCodes.Ldloc_S, isMultiPassEnabled))
-                .SetAndAdvance(OpCodes.Call, GetCameraPositionMethod)
+                // replace `camera.position` with our `eyePosition` (this allows the render texture caching to work properly)
+                .RemoveInstruction()
+                .SetAndAdvance(OpCodes.Call, GetEyePosition)
 
                 // remove original stereoEnabled assignment
                 .MatchForward(false,
@@ -93,20 +136,14 @@ namespace AssetBundleLoadingTools.Patches
                 .ThrowIfInvalid("RenderMirrorTexture currentCamera.stereoEnabled branch not found")
                 .RemoveInstruction()
                 .SetAndAdvance(OpCodes.Ldloc_S, isStereoSinglePassEnabled)
-                .Instructions();
-        }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static Vector3 GetCameraPosition(Camera camera, Transform transform, bool stereoEnabled, bool isMultiPassEnabled)
-        {
-            if (stereoEnabled && isMultiPassEnabled)
-            {
-                return camera.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, 0), camera.stereoActiveEye);
-            }
-            else
-            {
-                return transform.position;
-            }
+                // replace `camera.projectionMatrix` with our `projectionMatrix`
+                .MatchForward(false,
+                    new CodeMatch(OpCodes.Ldarg_1),
+                    new CodeMatch(i => i.Calls(CameraGetProjectionMatrix)))
+                .SetAndAdvance(OpCodes.Call, GetProjectionMatrix)
+                .RemoveInstruction()
+                .Instructions();
         }
     }
 }
