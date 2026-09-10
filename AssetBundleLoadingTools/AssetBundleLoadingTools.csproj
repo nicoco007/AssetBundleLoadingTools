@@ -56,10 +56,6 @@
   </ItemGroup>
     
   <ItemGroup>
-    <ArtifactFiles Include="$(ProjectDir)..\ShaderBundles\*.shaderbundle" DestinationFolder="UserData\AssetBundleLoadingTools\ShaderBundles" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="BSIPA.AssemblyPublicizer.MSBuild" Version="0.5.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

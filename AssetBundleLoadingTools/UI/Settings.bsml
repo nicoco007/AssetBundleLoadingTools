@@ -1,4 +1,3 @@
 ﻿<settings-container xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd">
     <toggle-setting text="Enable Multi-Pass Rendering" value="EnableMultiPassRendering" bind-value="true" hover-hint="Enable legacy multi pass rendering for better compatibility with older models. Enabling this may have a negative performance impact." />
-	<toggle-setting text="Show Unsupported Shaders" value="ShowUnsupportedShaders" bind-value="true" hover-hint="This will show objects that use unsupported shaders. These objects are often only visible in one eye when multi-pass rendering is disabled. Mostly useful for debugging." />
 </settings-container>

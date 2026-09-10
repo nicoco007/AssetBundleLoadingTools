@@ -28,11 +28,5 @@ namespace AssetBundleLoadingTools.UI
             get => Plugin.Config.EnableMultiPassRendering;
             set => Plugin.Config.EnableMultiPassRendering = value;
         }
-
-        internal bool ShowUnsupportedShaders
-        {
-            get => Plugin.Config.ShowUnsupportedShaders;
-            set => Plugin.Config.ShowUnsupportedShaders = value;
-        }
     }
 }
